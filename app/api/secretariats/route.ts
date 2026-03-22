@@ -30,7 +30,6 @@ export async function POST(req: NextRequest) {
     entityType: "Secretariat",
     entityId: secretariat.id,
     metadata: parsed.data,
-    ip: req.headers.get("x-forwarded-for") ?? undefined,
   })
 
   return NextResponse.json(secretariat, { status: 201 })

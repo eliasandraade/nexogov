@@ -44,7 +44,6 @@ export async function PATCH(
     entityType: "User",
     entityId: id,
     metadata: rest,
-    ip: req.headers.get("x-forwarded-for") ?? undefined,
   })
 
   return NextResponse.json(user)
