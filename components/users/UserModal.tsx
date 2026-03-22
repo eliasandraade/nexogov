@@ -37,7 +37,7 @@ export function UserModal({ open, onClose, user }: UserModalProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [role, setRole] = useState<UserRole>("OPERADOR_SETOR")
+  const [role, setRole] = useState<UserRole>("SERVIDOR_PUBLICO")
   const [active, setActive] = useState(true)
   const [secretariatId, setSecretariatId] = useState("")
   const [organId, setOrganId] = useState("")
@@ -74,7 +74,7 @@ export function UserModal({ open, onClose, user }: UserModalProps) {
       setSectorId(user.sectorId ?? "")
       setPassword("")
     } else {
-      setName(""); setEmail(""); setPassword(""); setRole("OPERADOR_SETOR")
+      setName(""); setEmail(""); setPassword(""); setRole("SERVIDOR_PUBLICO")
       setActive(true); setSecretariatId(""); setOrganId(""); setSectorId("")
     }
     setError("")
@@ -153,7 +153,7 @@ export function UserModal({ open, onClose, user }: UserModalProps) {
               <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(Object.keys(USER_ROLE_LABELS) as UserRole[]).map((r) => (
+                  {(["ADMIN_SISTEMA", "DEV", "PREFEITO", "VICE_PREFEITO", "SECRETARIO", "GESTOR", "SERVIDOR_PUBLICO", "CONSELHEIRO"] as UserRole[]).map((r) => (
                     <SelectItem key={r} value={r}>{USER_ROLE_LABELS[r]}</SelectItem>
                   ))}
                 </SelectContent>

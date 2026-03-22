@@ -34,8 +34,9 @@ export class ProtocolService {
           type: input.type as any,
           status: "OPEN",
           priority: input.priority as any,
-          requesterName: input.requesterName || null,
-          requesterDocument: input.requesterDocument || null,
+          requesterName: input.requesters?.[0]?.name || input.requesterName || null,
+          requesterDocument: input.requesters?.[0]?.document || input.requesterDocument || null,
+          requesters: input.requesters ?? [],
           internalNotes: input.internalNotes || null,
           originSecretariatId: input.originSecretariatId,
           originOrganId: input.originOrganId || null,
@@ -89,6 +90,7 @@ export class ProtocolService {
       toSecretariatId: string
       toOrganId?: string
       toSectorId?: string
+      ccDestinations?: Array<{ toSecretariatId: string; toSectorId?: string }>
     },
     performedById: string
   ) {
@@ -134,6 +136,27 @@ export class ProtocolService {
         },
       })
 
+      // CC forwarding movements (don't change current location)
+      if (input.ccDestinations?.length) {
+        for (const cc of input.ccDestinations) {
+          if (!cc.toSecretariatId) continue
+          await tx.movement.create({
+            data: {
+              protocolId,
+              type: "FORWARDING",
+              description: `[CÓPIA] ${input.description}`,
+              notes: input.notes || null,
+              fromSecretariatId: protocol.currentSecretariatId,
+              fromSectorId: protocol.currentSectorId,
+              toSecretariatId: cc.toSecretariatId,
+              toSectorId: cc.toSectorId || null,
+              isInterSecretariat: protocol.currentSecretariatId !== cc.toSecretariatId,
+              performedById,
+            },
+          })
+        }
+      }
+
       await tx.auditLog.create({
         data: {
           action: "PROTOCOL_FORWARDED",
@@ -144,6 +167,7 @@ export class ProtocolService {
             from: protocol.currentSecretariatId,
             to: input.toSecretariatId,
             isInterSecretariat,
+            ccCount: input.ccDestinations?.length ?? 0,
           },
           ip: "server",
           userAgent: "server-action",

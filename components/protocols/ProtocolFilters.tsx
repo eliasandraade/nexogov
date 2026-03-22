@@ -104,6 +104,7 @@ export function ProtocolFilters({ secretariats }: ProtocolFiltersProps) {
           <SelectItem value="HUMAN_RESOURCES">Recursos Humanos</SelectItem>
           <SelectItem value="SOCIAL">Social</SelectItem>
           <SelectItem value="ENVIRONMENTAL">Ambiental</SelectItem>
+          <SelectItem value="OTHER">Outro</SelectItem>
         </SelectContent>
       </Select>
 

@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Send, Loader2, X } from "lucide-react"
+import { Send, Loader2, X, Plus, Trash2 } from "lucide-react"
 
 interface Secretariat {
   id: string
@@ -24,6 +24,11 @@ interface Sector {
   id: string
   name: string
   secretariatId: string
+}
+
+interface CCDestination {
+  toSecretariatId: string
+  toSectorId: string
 }
 
 interface ForwardProtocolButtonProps {
@@ -43,8 +48,8 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
   const [toSectorId, setToSectorId] = useState("")
   const [description, setDescription] = useState("")
   const [notes, setNotes] = useState("")
+  const [ccDestinations, setCcDestinations] = useState<CCDestination[]>([])
 
-  // Load org data when modal opens
   useEffect(() => {
     if (!open || secretariats.length > 0) return
     fetch("/api/org/secretariats")
@@ -57,6 +62,18 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
   }, [open, secretariats.length])
 
   const filteredSectors = sectors.filter((s) => s.secretariatId === toSecretariatId)
+
+  function addCC() {
+    setCcDestinations((prev) => [...prev, { toSecretariatId: "", toSectorId: "" }])
+  }
+  function updateCC(index: number, key: keyof CCDestination, value: string) {
+    setCcDestinations((prev) =>
+      prev.map((cc, i) => i === index ? { ...cc, [key]: value } : cc)
+    )
+  }
+  function removeCC(index: number) {
+    setCcDestinations((prev) => prev.filter((_, i) => i !== index))
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -77,6 +94,12 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
           notes: notes || undefined,
           toSecretariatId,
           toSectorId: toSectorId || undefined,
+          ccDestinations: ccDestinations
+            .filter((cc) => cc.toSecretariatId)
+            .map((cc) => ({
+              toSecretariatId: cc.toSecretariatId,
+              toSectorId: cc.toSectorId || undefined,
+            })),
         }),
       })
 
@@ -102,6 +125,7 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
     setToSectorId("")
     setDescription("")
     setNotes("")
+    setCcDestinations([])
     setError(null)
   }
 
@@ -117,9 +141,8 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
-          <div className="bg-card rounded-lg shadow-xl w-full max-w-lg">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card z-10">
               <h2 className="text-base font-semibold">Encaminhar Protocolo</h2>
               <button
                 onClick={handleClose}
@@ -131,71 +154,131 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* Destination secretariat */}
+              {/* Primary destination */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Destino Principal
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <Label>Secretaria de Destino *</Label>
                 <Select
                   value={toSecretariatId}
-                  onValueChange={(v) => {
-                    setToSecretariatId(v)
-                    setToSectorId("")
-                  }}
+                  onValueChange={(v) => { setToSecretariatId(v); setToSectorId("") }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a secretaria..." />
                   </SelectTrigger>
                   <SelectContent>
                     {secretariats.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.code} — {s.name}
-                      </SelectItem>
+                      <SelectItem key={s.id} value={s.id}>{s.code} — {s.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Destination sector */}
               {filteredSectors.length > 0 && (
                 <div className="space-y-2">
                   <Label>Setor de Destino</Label>
-                  <Select
-                    value={toSectorId}
-                    onValueChange={setToSectorId}
-                  >
+                  <Select value={toSectorId} onValueChange={setToSectorId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o setor (opcional)..." />
                     </SelectTrigger>
                     <SelectContent>
                       {filteredSectors.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.name}
-                        </SelectItem>
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               )}
 
-              {/* Description */}
-              <div className="space-y-2">
-                <Label>Descrição do Encaminhamento *</Label>
-                <Textarea
-                  placeholder="Descreva o motivo ou instrução deste encaminhamento..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="min-h-[80px]"
-                  required
-                />
-              </div>
+              {/* CC destinations */}
+              {ccDestinations.length > 0 && (
+                <div className="space-y-3 pt-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Cópias (CC)
+                  </p>
+                  {ccDestinations.map((cc, i) => {
+                    const ccSectors = sectors.filter((s) => s.secretariatId === cc.toSecretariatId)
+                    return (
+                      <div key={i} className="flex gap-2 items-start p-3 border rounded-md">
+                        <div className="flex-1 space-y-2">
+                          <Select
+                            value={cc.toSecretariatId}
+                            onValueChange={(v) => updateCC(i, "toSecretariatId", v)}
+                          >
+                            <SelectTrigger className="h-8 text-sm">
+                              <SelectValue placeholder="Secretaria..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {secretariats.map((s) => (
+                                <SelectItem key={s.id} value={s.id}>{s.code} — {s.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {ccSectors.length > 0 && (
+                            <Select
+                              value={cc.toSectorId}
+                              onValueChange={(v) => updateCC(i, "toSectorId", v)}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue placeholder="Setor (opcional)..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ccSectors.map((s) => (
+                                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeCC(i)}
+                          className="text-muted-foreground hover:text-destructive mt-1.5"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
 
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label>Observações Internas</Label>
-                <Textarea
-                  placeholder="Anotações complementares (opcional)..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+                onClick={addCC}
+                disabled={ccDestinations.length >= 5}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Adicionar Secretaria em Cópia (CC)
+              </Button>
+
+              <div className="border-t border-border pt-4 space-y-3">
+                <div className="space-y-2">
+                  <Label>Descrição do Encaminhamento *</Label>
+                  <Textarea
+                    placeholder="Descreva o motivo ou instrução deste encaminhamento..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="min-h-[80px]"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Observações Internas</Label>
+                  <Textarea
+                    placeholder="Anotações complementares (opcional)..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </div>
               </div>
 
               {error && (
@@ -207,15 +290,9 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
               <div className="flex gap-3 pt-2">
                 <Button type="submit" disabled={loading || !toSecretariatId || !description.trim()}>
                   {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Encaminhando...
-                    </>
+                    <><Loader2 className="h-4 w-4 animate-spin" />Encaminhando...</>
                   ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      Confirmar Encaminhamento
-                    </>
+                    <><Send className="h-4 w-4" />Confirmar Encaminhamento</>
                   )}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>

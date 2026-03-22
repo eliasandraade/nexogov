@@ -34,6 +34,7 @@ export async function POST(
         toSecretariatId: parsed.data.toSecretariatId,
         toOrganId: parsed.data.toOrganId || undefined,
         toSectorId: parsed.data.toSectorId || undefined,
+        ccDestinations: parsed.data.ccDestinations,
       },
       session.user.id
     )

@@ -3,17 +3,23 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import { formatDate } from "@/lib/utils/format"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { canViewAuditLogs } from "@/lib/permissions"
+import Link from "next/link"
 
-async function getAuditData() {
-  const [auditLogs, documentAccessLogs] = await Promise.all([
+const PAGE_SIZE = 50
+
+async function getAuditData(page: number) {
+  const skip = (page - 1) * PAGE_SIZE
+  const [auditLogs, auditTotal, documentAccessLogs, docTotal] = await Promise.all([
     prisma.auditLog.findMany({
-      take: 100,
+      take: PAGE_SIZE,
+      skip,
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -27,8 +33,10 @@ async function getAuditData() {
         secretariat: { select: { code: true } },
       },
     }),
+    prisma.auditLog.count(),
     prisma.documentAccessLog.findMany({
-      take: 100,
+      take: PAGE_SIZE,
+      skip,
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -43,8 +51,9 @@ async function getAuditData() {
         user: { select: { name: true } },
       },
     }),
+    prisma.documentAccessLog.count(),
   ])
-  return { auditLogs, documentAccessLogs }
+  return { auditLogs, auditTotal, documentAccessLogs, docTotal }
 }
 
 const ACTION_VARIANTS: Record<string, "default" | "destructive" | "secondary" | "outline" | "success" | "warning"> = {
@@ -58,24 +67,36 @@ const ACTION_VARIANTS: Record<string, "default" | "destructive" | "secondary" | 
   ERROR: "destructive",
 }
 
-export default async function AuditPage() {
+export default async function AuditPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
   const session = await auth()
   if (!session || !canViewAuditLogs(session.user.role)) redirect("/dashboard")
 
-  const { auditLogs, documentAccessLogs } = await getAuditData()
+  const { page: pageParam } = await searchParams
+  const page = Math.max(1, Number(pageParam) || 1)
+
+  const { auditLogs, auditTotal, documentAccessLogs, docTotal } = await getAuditData(page)
   const invalidAttempts = documentAccessLogs.filter((l) => !l.success)
+  const auditPages = Math.ceil(auditTotal / PAGE_SIZE)
+  const docPages = Math.ceil(docTotal / PAGE_SIZE)
 
   return (
     <div>
-      <Topbar title="Auditoria" subtitle="Registros de atividade e acesso do sistema" />
+      <Topbar
+        title="Auditoria"
+        subtitle={`${auditTotal} eventos do sistema · ${docTotal} acessos a documentos`}
+      />
       <div className="p-6">
         <Tabs defaultValue="system">
           <TabsList className="mb-4">
             <TabsTrigger value="system">
-              Atividade do Sistema ({auditLogs.length})
+              Atividade do Sistema ({auditTotal})
             </TabsTrigger>
             <TabsTrigger value="documents">
-              Acesso a Documentos ({documentAccessLogs.length})
+              Acesso a Documentos ({docTotal})
             </TabsTrigger>
             <TabsTrigger value="invalid" className={invalidAttempts.length > 0 ? "text-destructive" : ""}>
               Tentativas Inválidas ({invalidAttempts.length})
@@ -138,6 +159,23 @@ export default async function AuditPage() {
                 </TableBody>
               </Table>
             </div>
+            {auditPages > 1 && (
+              <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
+                <span>Página {page} de {auditPages} · {auditTotal} registros</span>
+                <div className="flex gap-2">
+                  {page > 1 && (
+                    <Link href={`?page=${page - 1}`}>
+                      <Button variant="outline" size="sm">Anterior</Button>
+                    </Link>
+                  )}
+                  {page < auditPages && (
+                    <Link href={`?page=${page + 1}`}>
+                      <Button variant="outline" size="sm">Próxima</Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="documents">

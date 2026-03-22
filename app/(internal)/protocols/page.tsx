@@ -114,7 +114,7 @@ export default async function ProtocolsPage({
     getSecretariats(),
   ])
 
-  const canCreate = ["ADMIN", "GESTOR", "PROTOCOLO"].includes(session?.user.role ?? "")
+  const canCreate = ["ADMIN_SISTEMA", "DEV", "ADMIN", "GESTOR", "PREFEITO", "VICE_PREFEITO", "SECRETARIO", "SERVIDOR_PUBLICO", "PROTOCOLO"].includes(session?.user.role ?? "")
   const totalPages = Math.ceil(total / pageSize)
 
   return (
@@ -159,20 +159,34 @@ export default async function ProtocolsPage({
                 </TableRow>
               ) : (
                 protocols.map((p) => {
+                  const now = new Date()
                   const isOverdue =
-                    p.deadlineAt &&
-                    p.deadlineAt < new Date() &&
-                    p.status !== "CLOSED" &&
-                    p.status !== "ARCHIVED"
+                    p.deadlineAt && p.deadlineAt < now &&
+                    p.status !== "CLOSED" && p.status !== "ARCHIVED"
+                  const isNearDeadline =
+                    !isOverdue && p.deadlineAt &&
+                    (p.deadlineAt.getTime() - now.getTime()) < 3 * 24 * 60 * 60 * 1000 &&
+                    p.status !== "CLOSED" && p.status !== "ARCHIVED"
                   return (
-                  <TableRow key={p.id} className={isOverdue ? "bg-destructive/5" : undefined}>
+                  <TableRow
+                    key={p.id}
+                    className={
+                      isOverdue
+                        ? "bg-destructive/5"
+                        : isNearDeadline
+                        ? "bg-yellow-50 dark:bg-yellow-950/20"
+                        : undefined
+                    }
+                  >
                     <TableCell>
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono text-xs font-semibold text-primary">
                           {p.number}
                         </span>
                         {isOverdue && (
-                          <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0" title="Prazo vencido" />
+                          <span title="Prazo vencido">
+                            <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />
+                          </span>
                         )}
                       </div>
                     </TableCell>

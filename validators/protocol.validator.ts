@@ -16,6 +16,11 @@ export const createProtocolValidator = z.object({
   priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).default("NORMAL"),
   requesterName: z.string().max(200).optional().or(z.literal("")),
   requesterDocument: z.string().max(20).optional().or(z.literal("")),
+  requesters: z.array(z.object({
+    name: z.string().min(1).max(200),
+    document: z.string().max(30).optional().or(z.literal("")),
+    company: z.string().max(200).optional().or(z.literal("")),
+  })).optional().default([]),
   internalNotes: z.string().max(2000).optional().or(z.literal("")),
   password: z
     .string()
@@ -47,6 +52,10 @@ export const forwardProtocolValidator = z.object({
   toSecretariatId: z.string().cuid("Secretaria de destino inválida"),
   toOrganId: z.string().cuid().optional().or(z.literal("")),
   toSectorId: z.string().cuid().optional().or(z.literal("")),
+  ccDestinations: z.array(z.object({
+    toSecretariatId: z.string().cuid(),
+    toSectorId: z.string().cuid().optional().or(z.literal("")),
+  })).optional().default([]),
 })
 
 export type ForwardProtocolInput = z.infer<typeof forwardProtocolValidator>

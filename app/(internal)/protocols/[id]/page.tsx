@@ -67,7 +67,7 @@ export default async function ProtocolDetailPage({
 
   if (!protocol) notFound()
 
-  const canForward = ["ADMIN", "GESTOR", "PROTOCOLO"].includes(
+  const canForward = ["ADMIN_SISTEMA", "DEV", "ADMIN", "GESTOR", "PREFEITO", "VICE_PREFEITO", "SECRETARIO", "SERVIDOR_PUBLICO", "PROTOCOLO"].includes(
     session?.user.role ?? ""
   )
 
@@ -213,25 +213,34 @@ export default async function ProtocolDetailPage({
               </CardContent>
             </Card>
 
-            {/* Requester */}
-            {protocol.requesterName && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Interessado
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm space-y-1">
-                  <p className="font-medium">{protocol.requesterName}</p>
-                  {protocol.requesterDocument && (
-                    <p className="text-muted-foreground text-xs">
-                      {protocol.requesterDocument}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            {/* Requesters */}
+            {(() => {
+              const requesters = Array.isArray(protocol.requesters) && protocol.requesters.length > 0
+                ? protocol.requesters as Array<{name: string; document?: string; company?: string}>
+                : protocol.requesterName
+                  ? [{ name: protocol.requesterName, document: protocol.requesterDocument ?? undefined }]
+                  : []
+              if (requesters.length === 0) return null
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Interessado{requesters.length > 1 ? "s" : ""}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-3">
+                    {requesters.map((r, i) => (
+                      <div key={i} className={i > 0 ? "pt-3 border-t border-border" : ""}>
+                        <p className="font-medium">{r.name}</p>
+                        {r.document && <p className="text-xs text-muted-foreground">{r.document}</p>}
+                        {r.company && <p className="text-xs text-muted-foreground italic">{r.company}</p>}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )
+            })()}
 
             {/* Metadata */}
             <Card>

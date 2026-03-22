@@ -6,7 +6,7 @@ import { SecretariatsClient } from "@/components/secretariats/SecretariatsClient
 
 export default async function SecretariatsPage() {
   const session = await auth()
-  if (session?.user.role !== "ADMIN") redirect("/dashboard")
+  if (!["ADMIN_SISTEMA", "DEV", "ADMIN"].includes(session?.user.role ?? "")) redirect("/dashboard")
 
   const secretariats = await prisma.secretariat.findMany({
     orderBy: { name: "asc" },

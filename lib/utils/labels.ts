@@ -53,8 +53,16 @@ export const MOVEMENT_TYPE_LABELS: Record<string, string> = {
 }
 
 export const USER_ROLE_LABELS: Record<string, string> = {
-  ADMIN: "Administrador",
+  ADMIN_SISTEMA: "Administrador do Sistema",
+  DEV: "DEV",
+  PREFEITO: "Prefeito",
+  VICE_PREFEITO: "Vice-Prefeito",
+  SECRETARIO: "Secretário",
   GESTOR: "Gestor",
+  SERVIDOR_PUBLICO: "Servidor Público",
+  CONSELHEIRO: "Conselheiro",
+  // Legacy
+  ADMIN: "Administrador",
   PROTOCOLO: "Protocolo",
   OPERADOR_SETOR: "Operador de Setor",
 }
