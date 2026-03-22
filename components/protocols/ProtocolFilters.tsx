@@ -4,8 +4,8 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Search, X } from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { Search, X, CalendarRange } from "lucide-react"
+import { useCallback, useRef, useState } from "react"
 
 interface Secretariat {
   id: string
@@ -43,7 +43,9 @@ export function ProtocolFilters({ secretariats }: ProtocolFiltersProps) {
     searchParams.has("status") ||
     searchParams.has("type") ||
     searchParams.has("priority") ||
-    searchParams.has("secretariatId")
+    searchParams.has("secretariatId") ||
+    searchParams.has("from") ||
+    searchParams.has("to")
 
   return (
     <div className="flex flex-wrap gap-2 flex-1">
@@ -105,6 +107,22 @@ export function ProtocolFilters({ secretariats }: ProtocolFiltersProps) {
         </SelectContent>
       </Select>
 
+      <Select
+        value={searchParams.get("priority") ?? "all"}
+        onValueChange={(v) => updateFilter("priority", v)}
+      >
+        <SelectTrigger className="w-36 h-8 text-sm">
+          <SelectValue placeholder="Prioridade" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Todas</SelectItem>
+          <SelectItem value="URGENT">Urgente</SelectItem>
+          <SelectItem value="HIGH">Alta</SelectItem>
+          <SelectItem value="NORMAL">Normal</SelectItem>
+          <SelectItem value="LOW">Baixa</SelectItem>
+        </SelectContent>
+      </Select>
+
       {secretariats.length > 0 && (
         <Select
           value={searchParams.get("secretariatId") ?? "all"}
@@ -123,6 +141,25 @@ export function ProtocolFilters({ secretariats }: ProtocolFiltersProps) {
           </SelectContent>
         </Select>
       )}
+
+      <div className="flex items-center gap-1.5">
+        <CalendarRange className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+        <Input
+          type="date"
+          className="w-36 h-8 text-sm"
+          value={searchParams.get("from") ?? ""}
+          onChange={(e) => updateFilter("from", e.target.value)}
+          title="Data inicial"
+        />
+        <span className="text-xs text-muted-foreground">—</span>
+        <Input
+          type="date"
+          className="w-36 h-8 text-sm"
+          value={searchParams.get("to") ?? ""}
+          onChange={(e) => updateFilter("to", e.target.value)}
+          title="Data final"
+        />
+      </div>
 
       {hasFilters && (
         <Button

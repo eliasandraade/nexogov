@@ -20,7 +20,7 @@ import {
   PROTOCOL_PRIORITY_VARIANTS,
   PROTOCOL_TYPE_LABELS,
 } from "@/lib/utils/labels"
-import { Plus, Eye } from "lucide-react"
+import { Plus, Eye, AlertTriangle } from "lucide-react"
 import { ProtocolFilters } from "@/components/protocols/ProtocolFilters"
 import { protocolFiltersValidator } from "@/validators/protocol.validator"
 
@@ -30,6 +30,8 @@ interface SearchParams {
   type?: string
   priority?: string
   secretariatId?: string
+  from?: string
+  to?: string
   page?: string
   pageSize?: string
 }
@@ -54,6 +56,15 @@ async function getProtocols(params: SearchParams) {
   if (filters.type) where.type = filters.type
   if (filters.priority) where.priority = filters.priority
   if (filters.secretariatId) where.currentSecretariatId = filters.secretariatId
+  if (filters.from || filters.to) {
+    where.createdAt = {}
+    if (filters.from) where.createdAt.gte = new Date(filters.from)
+    if (filters.to) {
+      const to = new Date(filters.to)
+      to.setHours(23, 59, 59, 999)
+      where.createdAt.lte = to
+    }
+  }
 
   const [total, protocols] = await Promise.all([
     prisma.protocol.count({ where }),
@@ -74,6 +85,7 @@ async function getProtocols(params: SearchParams) {
         currentSector: { select: { name: true } },
         createdBy: { select: { name: true } },
         createdAt: true,
+        deadlineAt: true,
         _count: { select: { documents: true, movements: true } },
       },
     }),
@@ -146,12 +158,23 @@ export default async function ProtocolsPage({
                   </TableCell>
                 </TableRow>
               ) : (
-                protocols.map((p) => (
-                  <TableRow key={p.id}>
+                protocols.map((p) => {
+                  const isOverdue =
+                    p.deadlineAt &&
+                    p.deadlineAt < new Date() &&
+                    p.status !== "CLOSED" &&
+                    p.status !== "ARCHIVED"
+                  return (
+                  <TableRow key={p.id} className={isOverdue ? "bg-destructive/5" : undefined}>
                     <TableCell>
-                      <span className="font-mono text-xs font-semibold text-primary">
-                        {p.number}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs font-semibold text-primary">
+                          {p.number}
+                        </span>
+                        {isOverdue && (
+                          <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0" title="Prazo vencido" />
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="max-w-[280px]">
@@ -205,7 +228,8 @@ export default async function ProtocolsPage({
                       </Link>
                     </TableCell>
                   </TableRow>
-                ))
+                  )
+                })
               )}
             </TableBody>
           </Table>
