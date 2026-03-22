@@ -1,0 +1,444 @@
+// NexoGov — Prisma Schema
+// All field names in English. Portuguese is reserved for UI labels only.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  GESTOR
+  PROTOCOLO
+  OPERADOR_SETOR
+}
+
+enum ProtocolStatus {
+  OPEN
+  IN_PROGRESS
+  PENDING
+  DEFERRED
+  ARCHIVED
+  CLOSED
+}
+
+enum ProtocolPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ProtocolType {
+  ADMINISTRATIVE
+  FINANCIAL
+  LEGAL
+  TECHNICAL
+  HUMAN_RESOURCES
+  SOCIAL
+  ENVIRONMENTAL
+  OTHER
+}
+
+enum MovementType {
+  CREATION
+  FORWARDING
+  RECEIPT
+  DISPATCH
+  ADMINISTRATIVE_OPINION
+  DOCUMENT_ATTACHMENT
+  STATUS_UPDATE
+  FINALIZATION
+}
+
+enum DocumentVisibility {
+  INTERNAL
+  RESTRICTED_BY_PROTOCOL_PASSWORD
+}
+
+enum DocumentAccessType {
+  VIEW
+  DOWNLOAD
+  PREVIEW
+  INVALID_ATTEMPT
+}
+
+enum DocumentAccessOrigin {
+  INTERNAL_AUTHENTICATED
+  EXTERNAL_NUMBER_PASSWORD
+  EXTERNAL_INVALID_ATTEMPT
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  PROTOCOL_CREATED
+  PROTOCOL_UPDATED
+  PROTOCOL_STATUS_CHANGED
+  PROTOCOL_FORWARDED
+  DOCUMENT_ATTACHED
+  DOCUMENT_VIEWED
+  DOCUMENT_DOWNLOADED
+  DOCUMENT_ACCESS_DENIED
+  USER_CREATED
+  USER_UPDATED
+  SECRETARIAT_CREATED
+  ORGAN_CREATED
+  SECTOR_CREATED
+  ERROR
+}
+
+// ─────────────────────────────────────────────
+// ORGANIZATIONAL STRUCTURE
+// ─────────────────────────────────────────────
+
+model Secretariat {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organs  Organ[]
+  sectors Sector[]
+  users   User[]
+
+  protocolsOriginatedHere Protocol[] @relation("ProtocolSecretariatOrigin")
+  protocolsCurrentlyHere  Protocol[] @relation("ProtocolSecretariatCurrent")
+
+  movementsAsOrigin      Movement[] @relation("MovementSecretariatOrigin")
+  movementsAsDestination Movement[] @relation("MovementSecretariatDestination")
+
+  auditLogs AuditLog[]
+
+  @@map("secretariats")
+}
+
+model Organ {
+  id            String      @id @default(cuid())
+  name          String
+  code          String      @unique
+  description   String?
+  active        Boolean     @default(true)
+  secretariatId String
+  secretariat   Secretariat @relation(fields: [secretariatId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  sectors Sector[]
+  users   User[]
+
+  protocolsOriginatedHere Protocol[] @relation("ProtocolOrganOrigin")
+  protocolsCurrentlyHere  Protocol[] @relation("ProtocolOrganCurrent")
+
+  movementsAsOrigin      Movement[] @relation("MovementOrganOrigin")
+  movementsAsDestination Movement[] @relation("MovementOrganDestination")
+
+  @@map("organs")
+}
+
+model Sector {
+  id            String      @id @default(cuid())
+  name          String
+  code          String      @unique
+  description   String?
+  active        Boolean     @default(true)
+  secretariatId String
+  secretariat   Secretariat @relation(fields: [secretariatId], references: [id])
+  organId       String?
+  organ         Organ?      @relation(fields: [organId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  users User[]
+
+  protocolsOriginatedHere Protocol[] @relation("ProtocolSectorOrigin")
+  protocolsCurrentlyHere  Protocol[] @relation("ProtocolSectorCurrent")
+
+  movementsAsOrigin      Movement[] @relation("MovementSectorOrigin")
+  movementsAsDestination Movement[] @relation("MovementSectorDestination")
+
+  @@map("sectors")
+}
+
+// ─────────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(OPERADOR_SETOR)
+  active       Boolean  @default(true)
+
+  secretariatId String?
+  secretariat   Secretariat? @relation(fields: [secretariatId], references: [id])
+  organId       String?
+  organ         Organ?       @relation(fields: [organId], references: [id])
+  sectorId      String?
+  sector        Sector?      @relation(fields: [sectorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Auth.js required fields
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  protocolsCreated    Protocol[]
+  movementsPerformed  Movement[]
+  documentsUploaded   Document[]
+  auditLogs           AuditLog[]
+  documentAccessLogs  DocumentAccessLog[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─────────────────────────────────────────────
+// PROTOCOL
+// ─────────────────────────────────────────────
+
+model Protocol {
+  id           String           @id @default(cuid())
+  number       String           @unique
+  year         Int
+  sequence     Int
+  passwordHash String
+
+  title             String
+  description       String           @db.Text
+  type              ProtocolType     @default(ADMINISTRATIVE)
+  status            ProtocolStatus   @default(OPEN)
+  priority          ProtocolPriority @default(NORMAL)
+
+  requesterName     String?
+  requesterDocument String?
+
+  internalNotes String? @db.Text
+
+  // Origin (immutable after creation)
+  originSecretariatId String
+  originSecretariat   Secretariat @relation("ProtocolSecretariatOrigin", fields: [originSecretariatId], references: [id])
+  originOrganId       String?
+  originOrgan         Organ?      @relation("ProtocolOrganOrigin", fields: [originOrganId], references: [id])
+  originSectorId      String?
+  originSector        Sector?     @relation("ProtocolSectorOrigin", fields: [originSectorId], references: [id])
+
+  // Current location (updated on each forwarding)
+  currentSecretariatId String
+  currentSecretariat   Secretariat @relation("ProtocolSecretariatCurrent", fields: [currentSecretariatId], references: [id])
+  currentOrganId       String?
+  currentOrgan         Organ?      @relation("ProtocolOrganCurrent", fields: [currentOrganId], references: [id])
+  currentSectorId      String?
+  currentSector        Sector?     @relation("ProtocolSectorCurrent", fields: [currentSectorId], references: [id])
+
+  deadlineAt DateTime?
+  closedAt   DateTime?
+
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  movements          Movement[]
+  documents          Document[]
+  documentAccessLogs DocumentAccessLog[]
+
+  @@unique([year, sequence])
+  @@index([status])
+  @@index([currentSecretariatId])
+  @@index([currentSectorId])
+  @@index([createdAt])
+  @@map("protocols")
+}
+
+// ─────────────────────────────────────────────
+// MOVEMENT
+// ─────────────────────────────────────────────
+
+model Movement {
+  id         String       @id @default(cuid())
+  protocolId String
+  protocol   Protocol     @relation(fields: [protocolId], references: [id])
+  type       MovementType
+  description String      @db.Text
+  notes      String?      @db.Text
+
+  fromSecretariatId String?
+  fromSecretariat   Secretariat? @relation("MovementSecretariatOrigin", fields: [fromSecretariatId], references: [id])
+  fromOrganId       String?
+  fromOrgan         Organ?       @relation("MovementOrganOrigin", fields: [fromOrganId], references: [id])
+  fromSectorId      String?
+  fromSector        Sector?      @relation("MovementSectorOrigin", fields: [fromSectorId], references: [id])
+
+  toSecretariatId String?
+  toSecretariat   Secretariat? @relation("MovementSecretariatDestination", fields: [toSecretariatId], references: [id])
+  toOrganId       String?
+  toOrgan         Organ?       @relation("MovementOrganDestination", fields: [toOrganId], references: [id])
+  toSectorId      String?
+  toSector        Sector?      @relation("MovementSectorDestination", fields: [toSectorId], references: [id])
+
+  isInterSecretariat Boolean @default(false)
+
+  performedById String
+  performedBy   User     @relation(fields: [performedById], references: [id])
+  createdAt     DateTime @default(now())
+
+  @@index([protocolId])
+  @@index([createdAt])
+  @@map("movements")
+}
+
+// ─────────────────────────────────────────────
+// DOCUMENT
+// ─────────────────────────────────────────────
+
+model Document {
+  id         String   @id @default(cuid())
+  protocolId String
+  protocol   Protocol @relation(fields: [protocolId], references: [id])
+
+  originalName String
+  storedName   String
+  storageKey   String
+  url          String
+  mimeType     String
+  sizeBytes    Int
+  fileHash     String?
+
+  visibility  DocumentVisibility @default(RESTRICTED_BY_PROTOCOL_PASSWORD)
+  description String?
+
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  accessLogs DocumentAccessLog[]
+
+  @@index([protocolId])
+  @@map("documents")
+}
+
+// ─────────────────────────────────────────────
+// DOCUMENT ACCESS LOG
+// ─────────────────────────────────────────────
+
+model DocumentAccessLog {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id])
+  protocolId String
+  protocol   Protocol @relation(fields: [protocolId], references: [id])
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  accessType   DocumentAccessType
+  accessOrigin DocumentAccessOrigin
+
+  routeReference String?
+  accessChannel  String  @default("web")
+
+  ip         String
+  userAgent  String  @db.Text
+  success    Boolean
+  failReason String?
+
+  createdAt DateTime @default(now())
+
+  @@index([documentId])
+  @@index([protocolId])
+  @@index([createdAt])
+  @@map("document_access_logs")
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id     String      @id @default(cuid())
+  action AuditAction
+
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id])
+  secretariatId String?
+  secretariat   Secretariat? @relation(fields: [secretariatId], references: [id])
+
+  entityType String?
+  entityId   String?
+  metadata   Json?
+
+  ip        String?
+  userAgent String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// PROTOCOL SEQUENCE CONTROL
+// ─────────────────────────────────────────────
+
+model ProtocolSequence {
+  year         Int @id
+  lastSequence Int @default(0)
+
+  @@map("protocol_sequences")
+}
