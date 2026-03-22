@@ -1,62 +1,28 @@
 import { auth } from "@/lib/auth/auth"
 import { Topbar } from "@/components/layout/Topbar"
-import { prisma } from "@/lib/prisma"
+import { DashboardService } from "@/services/dashboard.service"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatDate } from "@/lib/utils/format"
-import { FileText, Clock, CheckCircle, AlertCircle, TrendingUp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { PROTOCOL_STATUS_LABELS, PROTOCOL_STATUS_VARIANTS } from "@/lib/utils/labels"
-
-async function getDashboardData() {
-  const [
-    totalProtocols,
-    byStatus,
-    recentProtocols,
-    recentAuditLogs,
-  ] = await Promise.all([
-    prisma.protocol.count(),
-    prisma.protocol.groupBy({
-      by: ["status"],
-      _count: { status: true },
-    }),
-    prisma.protocol.findMany({
-      take: 10,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        number: true,
-        title: true,
-        status: true,
-        priority: true,
-        currentSecretariat: { select: { name: true, code: true } },
-        createdAt: true,
-      },
-    }),
-    prisma.auditLog.findMany({
-      take: 10,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        action: true,
-        entityType: true,
-        entityId: true,
-        user: { select: { name: true } },
-        createdAt: true,
-      },
-    }),
-  ])
-
-  const openCount = byStatus.find((s) => s.status === "OPEN")?._count.status ?? 0
-  const inProgressCount = byStatus.find((s) => s.status === "IN_PROGRESS")?._count.status ?? 0
-  const closedCount = byStatus.find((s) => s.status === "CLOSED")?._count.status ?? 0
-  const pendingCount = byStatus.find((s) => s.status === "PENDING")?._count.status ?? 0
-
-  return { totalProtocols, openCount, inProgressCount, closedCount, pendingCount, recentProtocols, recentAuditLogs }
-}
+import { formatDate, formatRelativeTime } from "@/lib/utils/format"
+import {
+  PROTOCOL_STATUS_LABELS,
+  PROTOCOL_STATUS_VARIANTS,
+} from "@/lib/utils/labels"
+import {
+  FileText,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  TrendingUp,
+  ArrowRight,
+  Shield,
+  Activity,
+} from "lucide-react"
+import Link from "next/link"
 
 export default async function DashboardPage() {
   const session = await auth()
-  const data = await getDashboardData()
+  const data = await DashboardService.getMetrics()
 
   return (
     <div>
@@ -65,127 +31,202 @@ export default async function DashboardPage() {
         subtitle={`Bem-vindo, ${session?.user.name}`}
       />
       <div className="p-6 space-y-6">
+
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Total de Protocolos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold">{data.totalProtocols}</span>
-                <FileText className="h-8 w-8 text-muted-foreground/30" />
+            <CardContent className="pt-5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total</span>
+                <FileText className="h-4 w-4 text-muted-foreground/40" />
               </div>
+              <p className="text-3xl font-bold">{data.totalProtocols}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                +{data.recentProtocols} nos últimos 30 dias
+              </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Em Aberto
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold text-blue-600">{data.openCount}</span>
-                <TrendingUp className="h-8 w-8 text-blue-200" />
+            <CardContent className="pt-5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Em Tramitação</span>
+                <TrendingUp className="h-4 w-4 text-blue-300" />
               </div>
+              <p className="text-3xl font-bold text-blue-600">
+                {data.openCount + data.inProgressCount}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {data.openCount} abertos · {data.inProgressCount} em andamento
+              </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Em Tramitação
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold text-yellow-600">{data.inProgressCount}</span>
-                <Clock className="h-8 w-8 text-yellow-200" />
+            <CardContent className="pt-5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pendentes</span>
+                <Clock className="h-4 w-4 text-yellow-300" />
               </div>
+              <p className="text-3xl font-bold text-yellow-600">{data.pendingCount}</p>
+              {data.overdueProtocols > 0 && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {data.overdueProtocols} com prazo vencido
+                </p>
+              )}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Finalizados
+            <CardContent className="pt-5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Encerrados</span>
+                <CheckCircle className="h-4 w-4 text-green-300" />
+              </div>
+              <p className="text-3xl font-bold text-green-600">{data.closedCount}</p>
+              {data.avgTramitationDays !== null && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Média: {data.avgTramitationDays} dias
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Protocols by secretariat */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Protocolos por Secretaria</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {data.bySecretariat.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum dado.</p>
+              ) : (
+                data.bySecretariat.map((item, i) => {
+                  if (!item.secretariat) return null
+                  const pct = data.totalProtocols > 0
+                    ? Math.round((item.count / data.totalProtocols) * 100)
+                    : 0
+                  return (
+                    <div key={i}>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-medium truncate max-w-[160px]" title={item.secretariat.name}>
+                          {item.secretariat.code}
+                        </span>
+                        <span className="text-muted-foreground">{item.count}</span>
+                      </div>
+                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Top flows */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Fluxos Inter-Secretaria</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {data.topFlows.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum encaminhamento registrado.</p>
+              ) : (
+                data.topFlows.map((flow, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs py-1.5 border-b border-border last:border-0">
+                    <span className="font-medium text-primary w-16 flex-shrink-0">
+                      {flow.from?.code ?? "—"}
+                    </span>
+                    <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    <span className="font-medium flex-1">{flow.to?.code ?? "—"}</span>
+                    <span className="text-muted-foreground font-mono">{flow.count}x</span>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Security */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Segurança
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold text-green-600">{data.closedCount}</span>
-                <CheckCircle className="h-8 w-8 text-green-200" />
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Tentativas inválidas (7d)</span>
+                <span className={`font-semibold ${data.documentAccessAttempts > 0 ? "text-destructive" : "text-green-600"}`}>
+                  {data.documentAccessAttempts}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Protocolos com prazo vencido</span>
+                <span className={`font-semibold ${data.overdueProtocols > 0 ? "text-destructive" : "text-green-600"}`}>
+                  {data.overdueProtocols}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Arquivados</span>
+                <span className="font-semibold text-muted-foreground">{data.archivedCount}</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Protocols */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-semibold">Protocolos Recentes</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-border">
-                {data.recentProtocols.length === 0 ? (
-                  <p className="text-sm text-muted-foreground p-4">Nenhum protocolo cadastrado.</p>
-                ) : (
-                  data.recentProtocols.map((p) => (
-                    <div key={p.id} className="flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-xs font-mono font-medium text-primary">
-                            {p.number}
+        {/* Recent audit log */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                Atividade Recente
+              </CardTitle>
+              <Link href="/audit" className="text-xs text-primary hover:underline">
+                Ver tudo
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-border">
+              {data.recentAuditLogs.length === 0 ? (
+                <p className="text-sm text-muted-foreground p-4">Nenhuma atividade registrada.</p>
+              ) : (
+                data.recentAuditLogs.map((log) => (
+                  <div key={log.id} className="flex items-start gap-3 px-6 py-3 hover:bg-muted/30 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium">
+                          {log.action.replace(/_/g, " ")}
+                        </span>
+                        {log.entityType && (
+                          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {log.entityType}
                           </span>
-                          <Badge
-                            variant={PROTOCOL_STATUS_VARIANTS[p.status as keyof typeof PROTOCOL_STATUS_VARIANTS] ?? "outline"}
-                            className="text-[10px] py-0"
-                          >
-                            {PROTOCOL_STATUS_LABELS[p.status as keyof typeof PROTOCOL_STATUS_LABELS]}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-foreground truncate">{p.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {p.currentSecretariat.name} · {formatDate(p.createdAt)}
-                        </p>
+                        )}
                       </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {log.user?.name ?? "Sistema"}
+                        {log.secretariat && ` · ${log.secretariat.code}`}
+                      </p>
                     </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Audit */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-semibold">Atividade Recente</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-border">
-                {data.recentAuditLogs.length === 0 ? (
-                  <p className="text-sm text-muted-foreground p-4">Nenhuma atividade registrada.</p>
-                ) : (
-                  data.recentAuditLogs.map((log) => (
-                    <div key={log.id} className="flex items-start gap-3 p-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-foreground">{log.action}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {log.user?.name ?? "Sistema"} · {formatDate(log.createdAt, true)}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      {formatRelativeTime(log.createdAt)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

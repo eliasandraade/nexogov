@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth/auth"
 import { Topbar } from "@/components/layout/Topbar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { formatDate, formatFileSize } from "@/lib/utils/format"
@@ -15,7 +16,10 @@ import {
 } from "@/lib/utils/labels"
 import { ProtocolTimeline } from "@/components/timeline/ProtocolTimeline"
 import { ForwardProtocolButton } from "@/components/protocols/ForwardProtocolButton"
-import { FileText, User, Calendar, MapPin, Clock } from "lucide-react"
+import { DocumentUploadForm } from "@/components/documents/DocumentUploadForm"
+import { ProtocolStatusButton } from "@/components/protocols/ProtocolStatusButton"
+import { FileText, User, Calendar, MapPin, Clock, Download } from "lucide-react"
+import Link from "next/link"
 
 async function getProtocol(id: string) {
   return prisma.protocol.findUnique({
@@ -91,7 +95,11 @@ export default async function ProtocolDetailPage({
           </div>
 
           {canForward && protocol.status !== "CLOSED" && protocol.status !== "ARCHIVED" && (
-            <ForwardProtocolButton protocolId={protocol.id} />
+            <div className="flex gap-2 flex-wrap">
+              <ForwardProtocolButton protocolId={protocol.id} />
+              <DocumentUploadForm protocolId={protocol.id} />
+              <ProtocolStatusButton protocolId={protocol.id} currentStatus={protocol.status} />
+            </div>
           )}
         </div>
 
@@ -123,14 +131,16 @@ export default async function ProtocolDetailPage({
             </Card>
 
             {/* Documents */}
-            {protocol.documents.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">
-                    Documentos Anexados ({protocol.documents.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">
+                  Documentos Anexados ({protocol.documents.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {protocol.documents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhum documento anexado.</p>
+                ) : (
                   <div className="space-y-2">
                     {protocol.documents.map((doc) => (
                       <div
@@ -139,24 +149,28 @@ export default async function ProtocolDetailPage({
                       >
                         <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {doc.originalName}
-                          </p>
+                          <p className="text-sm font-medium truncate">{doc.originalName}</p>
                           <p className="text-xs text-muted-foreground">
-                            {formatFileSize(doc.sizeBytes)} ·{" "}
-                            {doc.uploadedBy.name} ·{" "}
-                            {formatDate(doc.createdAt)}
+                            {formatFileSize(doc.sizeBytes)} · {doc.uploadedBy.name} · {formatDate(doc.createdAt)}
                           </p>
+                          {doc.description && (
+                            <p className="text-xs text-muted-foreground italic mt-0.5">{doc.description}</p>
+                          )}
                         </div>
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-[10px] flex-shrink-0">
                           {doc.visibility === "INTERNAL" ? "Interno" : "Restrito"}
                         </Badge>
+                        <Link href={`/api/documents/${doc.id}/download`} target="_blank">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0">
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                        </Link>
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Sidebar info */}
