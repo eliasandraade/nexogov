@@ -12,10 +12,13 @@ import {
   ChevronRight,
   FolderOpen,
   BarChart3,
+  Activity,
+  UserCircle,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils/cn"
 import type { UserRole } from "@prisma/client"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 interface NavItem {
   label: string
@@ -61,6 +64,12 @@ const navItems: NavItem[] = [
     roles: ["ADMIN"],
   },
   {
+    label: "Métricas",
+    href: "/metrics",
+    icon: Activity,
+    roles: ["ADMIN", "GESTOR"],
+  },
+  {
     label: "Relatórios",
     href: "/reports",
     icon: BarChart3,
@@ -71,6 +80,11 @@ const navItems: NavItem[] = [
     href: "/audit",
     icon: ClipboardList,
     roles: ["ADMIN", "GESTOR"],
+  },
+  {
+    label: "Meu Perfil",
+    href: "/profile",
+    icon: UserCircle,
   },
 ]
 
@@ -143,6 +157,7 @@ export function Sidebar({ userRole, userName, secretariatName }: SidebarProps) {
             )}
           </div>
         </div>
+        <ThemeToggle />
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-xs text-white/60 hover:text-white hover:bg-white/10 transition-colors"

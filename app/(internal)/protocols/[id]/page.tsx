@@ -18,7 +18,8 @@ import { ProtocolTimeline } from "@/components/timeline/ProtocolTimeline"
 import { ForwardProtocolButton } from "@/components/protocols/ForwardProtocolButton"
 import { DocumentUploadForm } from "@/components/documents/DocumentUploadForm"
 import { ProtocolStatusButton } from "@/components/protocols/ProtocolStatusButton"
-import { FileText, User, Calendar, MapPin, Clock, Download } from "lucide-react"
+import { MetricsService } from "@/services/metrics.service"
+import { FileText, User, Calendar, MapPin, Clock, Download, Timer } from "lucide-react"
 import Link from "next/link"
 
 async function getProtocol(id: string) {
@@ -59,7 +60,10 @@ export default async function ProtocolDetailPage({
 }) {
   const { id } = await params
   const session = await auth()
-  const protocol = await getProtocol(id)
+  const [protocol, elapsed] = await Promise.all([
+    getProtocol(id),
+    MetricsService.getProtocolElapsedDays(id),
+  ])
 
   if (!protocol) notFound()
 
@@ -270,6 +274,25 @@ export default async function ProtocolDetailPage({
                       <p className={protocol.deadlineAt < new Date() ? "text-destructive font-medium" : ""}>
                         {formatDate(protocol.deadlineAt)}
                       </p>
+                    </div>
+                  </>
+                )}
+                {elapsed && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium flex items-center gap-1">
+                        <Timer className="h-3 w-3" />
+                        Tempo decorrido
+                      </p>
+                      <p className="font-medium">
+                        {elapsed.elapsedDays === 0
+                          ? "Menos de 1 dia"
+                          : `${elapsed.elapsedDays} dia${elapsed.elapsedDays !== 1 ? "s" : ""}`}
+                      </p>
+                      {elapsed.isClosed && (
+                        <p className="text-xs text-muted-foreground">até encerramento</p>
+                      )}
                     </div>
                   </>
                 )}

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Search, X } from "lucide-react"
-import { useCallback } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 interface Secretariat {
   id: string
@@ -21,6 +21,8 @@ export function ProtocolFilters({ secretariats }: ProtocolFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [searchValue, setSearchValue] = useState(searchParams.get("search") ?? "")
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -50,14 +52,18 @@ export function ProtocolFilters({ secretariats }: ProtocolFiltersProps) {
         <Input
           placeholder="Buscar por número, título..."
           className="pl-8 w-64 h-8 text-sm"
-          defaultValue={searchParams.get("search") ?? ""}
+          value={searchValue}
           onChange={(e) => {
             const value = e.target.value
-            const params = new URLSearchParams(searchParams.toString())
-            if (value) params.set("search", value)
-            else params.delete("search")
-            params.delete("page")
-            router.push(`${pathname}?${params.toString()}`)
+            setSearchValue(value)
+            if (debounceRef.current) clearTimeout(debounceRef.current)
+            debounceRef.current = setTimeout(() => {
+              const params = new URLSearchParams(searchParams.toString())
+              if (value) params.set("search", value)
+              else params.delete("search")
+              params.delete("page")
+              router.push(`${pathname}?${params.toString()}`)
+            }, 400)
           }}
         />
       </div>

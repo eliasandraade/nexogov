@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ─── NexoGov Design Tokens ──────────────────────────────────────────── */
 :root {
   /* Institutional palette — sober, clear, government-grade */
@@ -34,6 +36,37 @@
   --ring: #1e3a5f;
 
   --radius: 0.5rem;
+}
+
+/* ─── Dark Mode ───────────────────────────────────────────────────────── */
+.dark {
+  --background: #0f1117;
+  --foreground: #e2e8f0;
+
+  --card: #1a1d27;
+  --card-foreground: #e2e8f0;
+
+  --popover: #1a1d27;
+  --popover-foreground: #e2e8f0;
+
+  --primary: #4a8fd4;
+  --primary-foreground: #ffffff;
+
+  --secondary: #1e2433;
+  --secondary-foreground: #e2e8f0;
+
+  --muted: #1e2433;
+  --muted-foreground: #8b95a8;
+
+  --accent: #1e2d45;
+  --accent-foreground: #4a8fd4;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #2a3040;
+  --input: #2a3040;
+  --ring: #4a8fd4;
 }
 
 @theme inline {
