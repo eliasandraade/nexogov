@@ -9,9 +9,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ["bcryptjs"],
-  },
+  serverExternalPackages: ["bcryptjs"],
 };
 
 export default nextConfig;

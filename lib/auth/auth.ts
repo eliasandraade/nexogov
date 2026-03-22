@@ -4,14 +4,11 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { loginValidator } from "@/validators/login.validator"
+import { authConfig } from "./auth.config"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma) as any,
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
   providers: [
     Credentials({
       name: "credentials",
@@ -52,32 +49,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-        token.role = (user as any).role
-        token.secretariatId = (user as any).secretariatId
-        token.secretariat = (user as any).secretariat
-        token.organId = (user as any).organId
-        token.organ = (user as any).organ
-        token.sectorId = (user as any).sectorId
-        token.sector = (user as any).sector
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string
-        session.user.role = token.role as any
-        session.user.secretariatId = token.secretariatId as string | null
-        session.user.secretariat = token.secretariat as any
-        session.user.organId = token.organId as string | null
-        session.user.organ = token.organ as any
-        session.user.sectorId = token.sectorId as string | null
-        session.user.sector = token.sector as any
-      }
-      return session
-    },
-  },
 })

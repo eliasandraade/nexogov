@@ -1,5 +1,8 @@
-import { auth } from "@/lib/auth/auth"
+import NextAuth from "next-auth"
+import { authConfig } from "@/lib/auth/auth.config"
 import { NextResponse } from "next/server"
+
+const { auth } = NextAuth(authConfig)
 
 export default auth((req) => {
   const { pathname } = req.nextUrl
@@ -9,7 +12,8 @@ export default auth((req) => {
   const isPublicRoute =
     pathname.startsWith("/consulta") ||
     pathname.startsWith("/login") ||
-    pathname.startsWith("/api/auth")
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/public")
 
   if (!isPublicRoute && !isAuthenticated) {
     const loginUrl = new URL("/login", req.url)
