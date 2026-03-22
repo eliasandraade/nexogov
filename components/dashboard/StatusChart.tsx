@@ -16,7 +16,7 @@ export function StatusChart({ data }: StatusChartProps) {
         <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
         <Tooltip
           contentStyle={{ fontSize: 12, borderRadius: 6 }}
-          formatter={(v: number) => [v, "Protocolos"]}
+          formatter={(v) => [v, "Protocolos"]}
         />
         <Bar dataKey="value" radius={[4, 4, 0, 0]}>
           {data.map((entry, i) => (
