@@ -11,6 +11,7 @@ import {
   LogOut,
   ChevronRight,
   FolderOpen,
+  BarChart3,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils/cn"
@@ -58,6 +59,12 @@ const navItems: NavItem[] = [
     href: "/users",
     icon: Users,
     roles: ["ADMIN"],
+  },
+  {
+    label: "Relatórios",
+    href: "/reports",
+    icon: BarChart3,
+    roles: ["ADMIN", "GESTOR"],
   },
   {
     label: "Auditoria",
