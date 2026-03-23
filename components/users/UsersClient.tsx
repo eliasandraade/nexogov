@@ -1,13 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatDate } from "@/lib/utils/format"
 import { USER_ROLE_LABELS } from "@/lib/utils/labels"
 import { UserModal } from "./UserModal"
-import { Plus, Pencil } from "lucide-react"
+import { Plus, Pencil, PowerOff, Power } from "lucide-react"
+import { toast } from "sonner"
 import type { UserRole } from "@prisma/client"
 
 interface User {
@@ -25,11 +27,34 @@ interface User {
 interface Secretariat { id: string; name: string; code: string }
 
 export function UsersClient({ users, secretariats }: { users: User[]; secretariats: Secretariat[] }) {
+  const router = useRouter()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
 
   function openCreate() { setEditingUser(null); setModalOpen(true) }
   function openEdit(u: User) { setEditingUser(u); setModalOpen(true) }
+
+  async function handleToggleActive(u: User) {
+    setTogglingId(u.id)
+    try {
+      const res = await fetch(`/api/users/${u.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !u.active }),
+      })
+      if (!res.ok) {
+        toast.error("Erro ao atualizar status do usuário.")
+        return
+      }
+      toast.success(u.active ? "Usuário inativado." : "Usuário ativado.")
+      router.refresh()
+    } catch {
+      toast.error("Erro de conexão.")
+    } finally {
+      setTogglingId(null)
+    }
+  }
 
   return (
     <>
@@ -51,7 +76,7 @@ export function UsersClient({ users, secretariats }: { users: User[]; secretaria
               <TableHead>Setor</TableHead>
               <TableHead className="w-20 text-center">Status</TableHead>
               <TableHead className="w-32">Criado em</TableHead>
-              <TableHead className="w-12"></TableHead>
+              <TableHead className="w-20"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -81,9 +106,24 @@ export function UsersClient({ users, secretariats }: { users: User[]; secretaria
                   <span className="text-xs text-muted-foreground">{formatDate(u.createdAt)}</span>
                 </TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(u)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(u)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={togglingId === u.id}
+                      onClick={() => handleToggleActive(u)}
+                      title={u.active ? "Inativar usuário" : "Ativar usuário"}
+                    >
+                      {u.active
+                        ? <PowerOff className="h-3.5 w-3.5 text-destructive" />
+                        : <Power className="h-3.5 w-3.5 text-green-600" />
+                      }
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

@@ -71,7 +71,7 @@ CLOUDINARY_API_SECRET=
 npx prisma db push
 
 # Popular com dados iniciais
-npx prisma db seed
+npx ts-node --compiler-options '{"module":"CommonJS"}' prisma/seed.ts
 ```
 
 O seed cria um admin padrão. Verifique `prisma/seed.ts` para as credenciais iniciais.
@@ -116,8 +116,7 @@ DATABASE_URL=<url_railway> npx prisma db push
   /forms          → formulários de criação
   /ui             → componentes base (shadcn)
 
-/services         → regras de negócio
-/repositories     → acesso ao banco
+/services         → regras de negócio (Prisma chamado aqui)
 /validators       → schemas Zod
 /lib              → auth, prisma, storage, audit, rate-limit, utils
 /prisma           → schema.prisma e seed.ts

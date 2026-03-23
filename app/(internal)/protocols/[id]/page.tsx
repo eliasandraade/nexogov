@@ -19,6 +19,7 @@ import { ForwardProtocolButton } from "@/components/protocols/ForwardProtocolBut
 import { DocumentUploadForm } from "@/components/documents/DocumentUploadForm"
 import { ProtocolStatusButton } from "@/components/protocols/ProtocolStatusButton"
 import { AddMovementButton } from "@/components/protocols/AddMovementButton"
+import { EditProtocolButton } from "@/components/protocols/EditProtocolButton"
 import { MetricsService } from "@/services/metrics.service"
 import { FileText, User, Calendar, MapPin, Clock, Download, Timer, Printer } from "lucide-react"
 import Link from "next/link"
@@ -102,6 +103,17 @@ export default async function ProtocolDetailPage({
           <div className="flex gap-2 flex-wrap">
             {canForward && protocol.status !== "CLOSED" && protocol.status !== "ARCHIVED" && (
               <>
+                <EditProtocolButton
+                  protocolId={protocol.id}
+                  current={{
+                    title: protocol.title,
+                    description: protocol.description,
+                    type: protocol.type,
+                    priority: protocol.priority,
+                    internalNotes: protocol.internalNotes,
+                    deadlineAt: protocol.deadlineAt,
+                  }}
+                />
                 <ForwardProtocolButton protocolId={protocol.id} />
                 <AddMovementButton protocolId={protocol.id} />
                 <DocumentUploadForm protocolId={protocol.id} />

@@ -61,6 +61,26 @@ export const forwardProtocolValidator = z.object({
 
 export type ForwardProtocolInput = z.infer<typeof forwardProtocolValidator>
 
+export const updateProtocolMetadataValidator = z.object({
+  title: z.string().min(5, "Título deve ter no mínimo 5 caracteres").max(200).optional(),
+  description: z.string().min(10, "Descrição deve ter no mínimo 10 caracteres").optional(),
+  type: z.enum([
+    "ADMINISTRATIVE",
+    "FINANCIAL",
+    "LEGAL",
+    "TECHNICAL",
+    "HUMAN_RESOURCES",
+    "SOCIAL",
+    "ENVIRONMENTAL",
+    "OTHER",
+  ]).optional(),
+  priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional(),
+  internalNotes: z.string().max(2000).optional().or(z.literal("")),
+  deadlineAt: z.string().datetime().optional().or(z.literal("")),
+})
+
+export type UpdateProtocolMetadataInput = z.infer<typeof updateProtocolMetadataValidator>
+
 export const protocolFiltersValidator = z.object({
   search: z.string().optional(),
   status: z.string().optional(),

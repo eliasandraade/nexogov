@@ -73,8 +73,8 @@ npm run build
 # Aplicar schema no banco
 npx prisma db push
 
-# Seed do banco
-npx prisma db seed
+# Seed do banco (local ou com DATABASE_URL do Railway)
+npx ts-node --compiler-options '{"module":"CommonJS"}' prisma/seed.ts
 ```
 
 ### Variáveis de ambiente (`.env`)
@@ -96,7 +96,9 @@ O projeto roda no Railway com deploy automático via push no branch `main` do Gi
 - **App:** Next.js em container Railway
 - **Banco:** PostgreSQL gerenciado pelo Railway (mesmo projeto)
 - **Storage:** Cloudinary (externo)
-- Para aplicar mudanças de schema em produção: `npx prisma db push` com a `DATABASE_URL` do Railway
+- Para aplicar mudanças de schema em produção: `DATABASE_URL=<url_publica_railway> npx prisma db push`
+- A URL pública do Railway está em: Railway Dashboard → PostgreSQL → Connect → Public URL
+- O hostname `postgres.railway.internal` só funciona de dentro dos containers Railway — use sempre a URL pública para rodar comandos localmente
 
 ---
 
@@ -107,16 +109,13 @@ Aplicação monolítica Next.js full-stack. Separação obrigatória:
 ```
 /app              → páginas, layouts, rotas (App Router)
 /components       → componentes de interface
-/services         → regras de negócio
-/repositories     → acesso ao banco (Prisma)
+/services         → regras de negócio (Prisma chamado aqui)
 /lib              → auth, prisma, storage, utils, audit, rate-limit
-/types            → tipagens globais
 /validators       → schemas Zod
-/hooks            → hooks client-side
-/prisma           → schema e seed
+/prisma           → schema.prisma e seed.ts
 ```
 
-**Regra crítica:** nunca colocar regra de negócio complexa diretamente em componentes ou route handlers. Regras vão em `/services`, acesso ao banco em `/repositories`.
+**Regra crítica:** nunca colocar regra de negócio complexa diretamente em componentes ou route handlers. Regras vão em `/services`.
 
 ---
 
