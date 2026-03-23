@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { DocumentService } from "@/services/document.service"
 import { documentAccessValidator } from "@/validators/document.validator"
+import { rateLimit, getRateLimitHeaders } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+
+  // Stricter rate limit for document access (password brute-force protection)
+  const rl = rateLimit(`public-documents:${ip}`, { maxRequests: 10, windowSeconds: 60 })
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente." },
+      { status: 429, headers: getRateLimitHeaders(rl) }
+    )
+  }
+
   const body = await req.json()
   const parsed = documentAccessValidator.safeParse(body)
 
@@ -12,11 +27,6 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     )
   }
-
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown"
   const userAgent = req.headers.get("user-agent") ?? "unknown"
 
   const result = await DocumentService.getDocumentsWithPasswordAuth(

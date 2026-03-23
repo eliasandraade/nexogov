@@ -32,6 +32,7 @@ interface SearchParams {
   secretariatId?: string
   from?: string
   to?: string
+  overdue?: string
   page?: string
   pageSize?: string
 }
@@ -64,6 +65,11 @@ async function getProtocols(params: SearchParams) {
       to.setHours(23, 59, 59, 999)
       where.createdAt.lte = to
     }
+  }
+
+  if (params.overdue === "true") {
+    where.deadlineAt = { lt: new Date() }
+    where.status = { notIn: ["CLOSED", "ARCHIVED"] }
   }
 
   const [total, protocols] = await Promise.all([

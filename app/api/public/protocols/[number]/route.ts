@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { publicProtocolLookupValidator } from "@/validators/document.validator"
+import { rateLimit, getRateLimitHeaders } from "@/lib/rate-limit"
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ number: string }> }
 ) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+  const rl = rateLimit(`public-protocol:${ip}`, { maxRequests: 30, windowSeconds: 60 })
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Muitas requisições. Tente novamente em alguns minutos." },
+      { status: 429, headers: getRateLimitHeaders(rl) }
+    )
+  }
+
   const { number } = await params
 
   const parsed = publicProtocolLookupValidator.safeParse({ number })

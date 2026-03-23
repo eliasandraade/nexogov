@@ -4,7 +4,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Search, X, CalendarRange } from "lucide-react"
+import { Search, X, CalendarRange, AlertTriangle } from "lucide-react"
 import { useCallback, useRef, useState } from "react"
 
 interface Secretariat {
@@ -45,7 +45,8 @@ export function ProtocolFilters({ secretariats }: ProtocolFiltersProps) {
     searchParams.has("priority") ||
     searchParams.has("secretariatId") ||
     searchParams.has("from") ||
-    searchParams.has("to")
+    searchParams.has("to") ||
+    searchParams.has("overdue")
 
   return (
     <div className="flex flex-wrap gap-2 flex-1">
@@ -161,6 +162,25 @@ export function ProtocolFilters({ secretariats }: ProtocolFiltersProps) {
           title="Data final"
         />
       </div>
+
+      <Button
+        variant={searchParams.get("overdue") === "true" ? "destructive" : "outline"}
+        size="sm"
+        className="h-8 text-xs"
+        onClick={() => {
+          const params = new URLSearchParams(searchParams.toString())
+          if (params.get("overdue") === "true") {
+            params.delete("overdue")
+          } else {
+            params.set("overdue", "true")
+          }
+          params.delete("page")
+          router.push(`${pathname}?${params.toString()}`)
+        }}
+      >
+        <AlertTriangle className="h-3.5 w-3.5" />
+        Atrasados
+      </Button>
 
       {hasFilters && (
         <Button

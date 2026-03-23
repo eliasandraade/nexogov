@@ -14,6 +14,8 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { StatusChart } from "@/components/dashboard/StatusChart"
+import { TemporalChart } from "@/components/dashboard/TemporalChart"
+import { FlowMatrix } from "@/components/dashboard/FlowMatrix"
 
 const STATUS_COLORS: Record<string, string> = {
   OPEN: "#3b82f6",
@@ -166,6 +168,30 @@ export default async function DashboardPage() {
                   </div>
                 ))
               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Temporal evolution + Flow matrix */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Evolução Mensal (12 meses)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TemporalChart data={data.temporalData} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Matriz de Fluxos Inter-Secretaria</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FlowMatrix
+                secretariats={data.flowSecretariats}
+                flows={data.flowMatrixData}
+              />
             </CardContent>
           </Card>
         </div>

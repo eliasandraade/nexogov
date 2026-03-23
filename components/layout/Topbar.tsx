@@ -1,4 +1,4 @@
-import { Bell, Search } from "lucide-react"
+import { Breadcrumbs } from "./Breadcrumbs"
 
 interface TopbarProps {
   title: string
@@ -7,21 +7,19 @@ interface TopbarProps {
 
 export function Topbar({ title, subtitle }: TopbarProps) {
   return (
-    <header className="h-14 bg-white border-b border-border flex items-center px-6 gap-4 sticky top-0 z-30">
-      <div className="flex-1">
-        <h1 className="text-sm font-semibold text-foreground">{title}</h1>
-        {subtitle && (
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
-        )}
+    <header className="h-14 bg-card border-b border-border flex items-center px-6 pl-14 lg:pl-6 gap-4 sticky top-0 z-30">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0">
+            <h1 className="text-sm font-semibold text-foreground truncate">{title}</h1>
+            {subtitle && (
+              <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
+            )}
+          </div>
+        </div>
       </div>
-
-      <div className="flex items-center gap-2">
-        <button className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <Search className="h-4 w-4" />
-        </button>
-        <button className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <Bell className="h-4 w-4" />
-        </button>
+      <div className="hidden sm:block">
+        <Breadcrumbs />
       </div>
     </header>
   )

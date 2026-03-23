@@ -117,6 +117,56 @@ export class DashboardService {
     const secretariatMap = Object.fromEntries(secretariats.map((s) => [s.id, s]))
     const flowSecretariatMap = Object.fromEntries(flowSecretariats.map((s) => [s.id, s]))
 
+    // Temporal data: protocols created per month (last 12 months)
+    const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
+    const [temporalRaw, allFlows, flowSecretariatsList] = await Promise.all([
+      prisma.protocol.findMany({
+        where: { createdAt: { gte: twelveMonthsAgo } },
+        select: { createdAt: true },
+      }),
+      prisma.movement.groupBy({
+        by: ["fromSecretariatId", "toSecretariatId"],
+        where: {
+          isInterSecretariat: true,
+          fromSecretariatId: { not: null },
+          toSecretariatId: { not: null },
+        },
+        _count: { id: true },
+      }),
+      prisma.secretariat.findMany({
+        where: { active: true },
+        select: { id: true, code: true },
+        orderBy: { code: "asc" },
+      }),
+    ])
+
+    // Build monthly counts
+    const monthCounts = new Map<string, number>()
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+      monthCounts.set(key, 0)
+    }
+    for (const p of temporalRaw) {
+      const key = `${p.createdAt.getFullYear()}-${String(p.createdAt.getMonth() + 1).padStart(2, "0")}`
+      if (monthCounts.has(key)) monthCounts.set(key, (monthCounts.get(key) ?? 0) + 1)
+    }
+    const monthLabels: Record<string, string> = {
+      "01": "Jan", "02": "Fev", "03": "Mar", "04": "Abr", "05": "Mai", "06": "Jun",
+      "07": "Jul", "08": "Ago", "09": "Set", "10": "Out", "11": "Nov", "12": "Dez",
+    }
+    const temporalData = Array.from(monthCounts.entries()).map(([key, count]) => ({
+      month: monthLabels[key.split("-")[1]] ?? key,
+      count,
+    }))
+
+    // Build flow matrix data
+    const flowMatrixData = allFlows.map((f) => ({
+      fromId: f.fromSecretariatId!,
+      toId: f.toSecretariatId!,
+      count: f._count.id,
+    }))
+
     // Compute real avg tramitation in days for closed protocols
     const closedProtocols = await prisma.protocol.findMany({
       where: { status: "CLOSED", closedAt: { not: null } },
@@ -157,6 +207,10 @@ export class DashboardService {
 
       recentAuditLogs,
       documentAccessAttempts,
+
+      temporalData,
+      flowMatrixData,
+      flowSecretariats: flowSecretariatsList,
     }
   }
 }

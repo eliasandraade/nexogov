@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, Eye, EyeOff, RefreshCw, Plus, Trash2, Upload, X, FileText } from "lucide-react"
 import { createProtocolValidator } from "@/validators/protocol.validator"
 import { formatFileSize } from "@/lib/utils/format"
+import { toast } from "sonner"
 
 interface Secretariat {
   id: string
@@ -171,6 +172,7 @@ export function NewProtocolForm({
         }
       }
 
+      toast.success("Protocolo registrado com sucesso!")
       router.push(`/protocols/${protocolId}`)
     } catch {
       setError("Erro de conexão. Tente novamente.")

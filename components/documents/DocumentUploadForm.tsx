@@ -3,7 +3,6 @@
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -13,14 +12,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Paperclip, Loader2, X, Upload } from "lucide-react"
+import { Paperclip, Loader2, X, Upload, Trash2 } from "lucide-react"
 import { formatFileSize } from "@/lib/utils/format"
+import { toast } from "sonner"
 
 interface DocumentUploadFormProps {
   protocolId: string
 }
 
+interface FileEntry {
+  file: File
+  description: string
+  visibility: string
+}
+
 const MAX_SIZE = 20 * 1024 * 1024
+const MAX_FILES = 10
 
 export function DocumentUploadForm({ protocolId }: DocumentUploadFormProps) {
   const router = useRouter()
@@ -28,59 +35,94 @@ export function DocumentUploadForm({ protocolId }: DocumentUploadFormProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [file, setFile] = useState<File | null>(null)
-  const [description, setDescription] = useState("")
-  const [visibility, setVisibility] = useState("RESTRICTED_BY_PROTOCOL_PASSWORD")
+  const [entries, setEntries] = useState<FileEntry[]>([])
+  const [uploadProgress, setUploadProgress] = useState(0)
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = e.target.files?.[0] ?? null
-    setError(null)
+  function handleFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = e.target.files
     if (!selected) return
-    if (selected.size > MAX_SIZE) {
-      setError("Arquivo muito grande. Limite: 20 MB.")
-      return
+    setError(null)
+
+    const newEntries: FileEntry[] = []
+    for (let i = 0; i < selected.length; i++) {
+      if (entries.length + newEntries.length >= MAX_FILES) {
+        setError(`Máximo de ${MAX_FILES} arquivos por vez.`)
+        break
+      }
+      const file = selected[i]
+      if (file.size > MAX_SIZE) {
+        setError(`"${file.name}" excede 20 MB.`)
+        continue
+      }
+      newEntries.push({ file, description: "", visibility: "RESTRICTED_BY_PROTOCOL_PASSWORD" })
     }
-    setFile(selected)
+
+    setEntries((prev) => [...prev, ...newEntries])
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  function removeEntry(index: number) {
+    setEntries((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function updateEntry(index: number, key: keyof Omit<FileEntry, "file">, value: string) {
+    setEntries((prev) =>
+      prev.map((entry, i) => (i === index ? { ...entry, [key]: value } : entry))
+    )
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!file) { setError("Selecione um arquivo."); return }
+    if (entries.length === 0) { setError("Selecione ao menos um arquivo."); return }
 
     setLoading(true)
     setError(null)
+    setUploadProgress(0)
 
-    const formData = new FormData()
-    formData.append("file", file)
-    formData.append("protocolId", protocolId)
-    formData.append("description", description)
-    formData.append("visibility", visibility)
+    let uploaded = 0
+    let lastError: string | null = null
 
-    try {
-      const res = await fetch("/api/documents", {
-        method: "POST",
-        body: formData,
-      })
-      const data = await res.json()
-      if (!res.ok) { setError(data.error ?? "Erro no upload."); return }
+    for (const entry of entries) {
+      const formData = new FormData()
+      formData.append("file", entry.file)
+      formData.append("protocolId", protocolId)
+      formData.append("description", entry.description)
+      formData.append("visibility", entry.visibility)
 
-      setOpen(false)
-      setFile(null)
-      setDescription("")
-      router.refresh()
-    } catch {
-      setError("Erro de conexão. Tente novamente.")
-    } finally {
-      setLoading(false)
+      try {
+        const res = await fetch("/api/documents", { method: "POST", body: formData })
+        const data = await res.json()
+        if (!res.ok) {
+          lastError = data.error ?? `Erro ao enviar "${entry.file.name}".`
+        } else {
+          uploaded++
+        }
+      } catch {
+        lastError = `Erro de conexão ao enviar "${entry.file.name}".`
+      }
+      setUploadProgress(Math.round(((uploaded + (lastError ? 1 : 0)) / entries.length) * 100))
     }
+
+    setLoading(false)
+
+    if (uploaded > 0) {
+      toast.success(`${uploaded} documento${uploaded !== 1 ? "s" : ""} anexado${uploaded !== 1 ? "s" : ""}.`)
+    }
+    if (lastError) {
+      setError(lastError)
+    }
+    if (!lastError) {
+      handleClose()
+    }
+    router.refresh()
   }
 
   function handleClose() {
     if (loading) return
     setOpen(false)
-    setFile(null)
-    setDescription("")
+    setEntries([])
     setError(null)
+    setUploadProgress(0)
   }
 
   return (
@@ -95,71 +137,96 @@ export function DocumentUploadForm({ protocolId }: DocumentUploadFormProps) {
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
-          <div className="bg-card rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-              <h2 className="text-base font-semibold">Juntar Documento</h2>
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card z-10">
+              <h2 className="text-base font-semibold">Juntar Documentos</h2>
               <button onClick={handleClose} disabled={loading} className="text-muted-foreground hover:text-foreground">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* File picker */}
+              {/* File picker area */}
               <div className="space-y-2">
-                <Label>Arquivo *</Label>
+                <Label>Arquivos *</Label>
                 <div
                   className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  {file ? (
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium truncate">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2 text-muted-foreground">
-                      <Upload className="h-8 w-8 mx-auto opacity-40" />
-                      <p className="text-sm">Clique para selecionar um arquivo</p>
-                      <p className="text-xs">PDF, Word, Excel, Imagens — máx. 20 MB</p>
-                    </div>
-                  )}
+                  <div className="space-y-2 text-muted-foreground">
+                    <Upload className="h-8 w-8 mx-auto opacity-40" />
+                    <p className="text-sm">Clique para selecionar arquivos</p>
+                    <p className="text-xs">PDF, Word, Excel, Imagens — máx. 20 MB cada — até {MAX_FILES} arquivos</p>
+                  </div>
                 </div>
                 <input
                   ref={fileInputRef}
                   type="file"
+                  multiple
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
                   className="hidden"
-                  onChange={handleFileChange}
+                  onChange={handleFilesSelected}
                 />
               </div>
 
-              {/* Visibility */}
-              <div className="space-y-2">
-                <Label>Visibilidade</Label>
-                <Select value={visibility} onValueChange={setVisibility}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="RESTRICTED_BY_PROTOCOL_PASSWORD">
-                      Restrito (requer senha do protocolo)
-                    </SelectItem>
-                    <SelectItem value="INTERNAL">
-                      Interno (apenas usuários do sistema)
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* File entries */}
+              {entries.length > 0 && (
+                <div className="space-y-3">
+                  {entries.map((entry, i) => (
+                    <div key={i} className="border rounded-md p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{entry.file.name}</p>
+                          <p className="text-xs text-muted-foreground">{formatFileSize(entry.file.size)}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeEntry(i)}
+                          disabled={loading}
+                          className="text-muted-foreground hover:text-destructive ml-2"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <Select
+                        value={entry.visibility}
+                        onValueChange={(v) => updateEntry(i, "visibility", v)}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="RESTRICTED_BY_PROTOCOL_PASSWORD">
+                            Restrito (requer senha)
+                          </SelectItem>
+                          <SelectItem value="INTERNAL">
+                            Interno (apenas usuários)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Textarea
+                        placeholder="Descrição (opcional)..."
+                        className="min-h-[40px] text-xs"
+                        value={entry.description}
+                        onChange={(e) => updateEntry(i, "description", e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              {/* Description */}
-              <div className="space-y-2">
-                <Label>Descrição (opcional)</Label>
-                <Textarea
-                  placeholder="Descreva o conteúdo ou finalidade do documento..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
+              {/* Upload progress */}
+              {loading && (
+                <div className="space-y-1">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">{uploadProgress}%</p>
+                </div>
+              )}
 
               {error && (
                 <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
@@ -168,11 +235,11 @@ export function DocumentUploadForm({ protocolId }: DocumentUploadFormProps) {
               )}
 
               <div className="flex gap-3 pt-2">
-                <Button type="submit" disabled={loading || !file}>
+                <Button type="submit" disabled={loading || entries.length === 0}>
                   {loading ? (
                     <><Loader2 className="h-4 w-4 animate-spin" />Enviando...</>
                   ) : (
-                    <><Paperclip className="h-4 w-4" />Juntar ao Protocolo</>
+                    <><Paperclip className="h-4 w-4" />Juntar {entries.length > 1 ? `${entries.length} Arquivos` : "ao Protocolo"}</>
                   )}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>

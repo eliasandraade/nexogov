@@ -19,7 +19,7 @@ import { ForwardProtocolButton } from "@/components/protocols/ForwardProtocolBut
 import { DocumentUploadForm } from "@/components/documents/DocumentUploadForm"
 import { ProtocolStatusButton } from "@/components/protocols/ProtocolStatusButton"
 import { MetricsService } from "@/services/metrics.service"
-import { FileText, User, Calendar, MapPin, Clock, Download, Timer } from "lucide-react"
+import { FileText, User, Calendar, MapPin, Clock, Download, Timer, Printer } from "lucide-react"
 import Link from "next/link"
 
 async function getProtocol(id: string) {
@@ -98,13 +98,21 @@ export default async function ProtocolDetailPage({
             <h2 className="text-xl font-semibold">{protocol.title}</h2>
           </div>
 
-          {canForward && protocol.status !== "CLOSED" && protocol.status !== "ARCHIVED" && (
-            <div className="flex gap-2 flex-wrap">
-              <ForwardProtocolButton protocolId={protocol.id} />
-              <DocumentUploadForm protocolId={protocol.id} />
-              <ProtocolStatusButton protocolId={protocol.id} currentStatus={protocol.status} />
-            </div>
-          )}
+          <div className="flex gap-2 flex-wrap">
+            {canForward && protocol.status !== "CLOSED" && protocol.status !== "ARCHIVED" && (
+              <>
+                <ForwardProtocolButton protocolId={protocol.id} />
+                <DocumentUploadForm protocolId={protocol.id} />
+                <ProtocolStatusButton protocolId={protocol.id} currentStatus={protocol.status} />
+              </>
+            )}
+            <Link href={`/protocols/${protocol.id}/print`} target="_blank">
+              <Button variant="outline" size="sm">
+                <Printer className="h-4 w-4" />
+                Imprimir
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

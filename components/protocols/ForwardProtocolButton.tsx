@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Send, Loader2, X, Plus, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 interface Secretariat {
   id: string
@@ -109,6 +110,7 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
         return
       }
 
+      toast.success("Protocolo encaminhado com sucesso!")
       setOpen(false)
       router.refresh()
     } catch {

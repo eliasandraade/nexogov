@@ -12,10 +12,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog"
 import { RefreshCw, Loader2, X } from "lucide-react"
 import { PROTOCOL_STATUS_LABELS } from "@/lib/utils/labels"
+import { toast } from "sonner"
 
 const EDITABLE_STATUSES = ["OPEN", "IN_PROGRESS", "PENDING", "DEFERRED", "CLOSED", "ARCHIVED"]
+const DESTRUCTIVE_STATUSES = ["CLOSED", "ARCHIVED"]
 
 interface ProtocolStatusButtonProps {
   protocolId: string
@@ -25,15 +37,13 @@ interface ProtocolStatusButtonProps {
 export function ProtocolStatusButton({ protocolId, currentStatus }: ProtocolStatusButtonProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState(currentStatus)
   const [notes, setNotes] = useState("")
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (status === currentStatus) { handleClose(); return }
-
+  async function doSubmit() {
     setLoading(true)
     setError(null)
 
@@ -45,6 +55,7 @@ export function ProtocolStatusButton({ protocolId, currentStatus }: ProtocolStat
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? "Erro ao atualizar."); return }
+      toast.success(`Status alterado para "${PROTOCOL_STATUS_LABELS[status]}"`)
       handleClose()
       router.refresh()
     } catch {
@@ -52,6 +63,17 @@ export function ProtocolStatusButton({ protocolId, currentStatus }: ProtocolStat
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (status === currentStatus) { handleClose(); return }
+
+    if (DESTRUCTIVE_STATUSES.includes(status)) {
+      setConfirmOpen(true)
+      return
+    }
+    doSubmit()
   }
 
   function handleClose() {
@@ -125,6 +147,31 @@ export function ProtocolStatusButton({ protocolId, currentStatus }: ProtocolStat
           </div>
         </div>
       )}
+
+      {/* Confirmation dialog for destructive actions */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {status === "CLOSED" ? "Encerrar protocolo?" : "Arquivar protocolo?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {status === "CLOSED"
+                ? "Ao encerrar, o protocolo não poderá mais receber encaminhamentos. Deseja continuar?"
+                : "Ao arquivar, o protocolo será removido da tramitação ativa. Deseja continuar?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { setConfirmOpen(false); doSubmit() }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {status === "CLOSED" ? "Sim, encerrar" : "Sim, arquivar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
