@@ -13,10 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Pencil, Loader2, X } from "lucide-react"
+import { Pencil, Loader2, X, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { PROTOCOL_TYPE_LABELS, PROTOCOL_PRIORITY_LABELS } from "@/lib/utils/labels"
 import type { ProtocolType, ProtocolPriority } from "@prisma/client"
+
+interface Requester {
+  name: string
+  document: string
+  company: string
+}
 
 interface EditProtocolButtonProps {
   protocolId: string
@@ -27,6 +33,7 @@ interface EditProtocolButtonProps {
     priority: ProtocolPriority
     internalNotes: string | null
     deadlineAt: Date | null
+    requesters?: Array<{ name: string; document?: string; company?: string }>
   }
 }
 
@@ -46,6 +53,13 @@ export function EditProtocolButton({ protocolId, current }: EditProtocolButtonPr
       ? new Date(current.deadlineAt).toISOString().slice(0, 10)
       : ""
   )
+  const [requesters, setRequesters] = useState<Requester[]>(
+    (current.requesters ?? []).map((r) => ({
+      name: r.name,
+      document: r.document ?? "",
+      company: r.company ?? "",
+    }))
+  )
 
   function handleOpen() {
     setTitle(current.title)
@@ -58,6 +72,13 @@ export function EditProtocolButton({ protocolId, current }: EditProtocolButtonPr
         ? new Date(current.deadlineAt).toISOString().slice(0, 10)
         : ""
     )
+    setRequesters(
+      (current.requesters ?? []).map((r) => ({
+        name: r.name,
+        document: r.document ?? "",
+        company: r.company ?? "",
+      }))
+    )
     setError(null)
     setOpen(true)
   }
@@ -66,6 +87,20 @@ export function EditProtocolButton({ protocolId, current }: EditProtocolButtonPr
     if (loading) return
     setOpen(false)
     setError(null)
+  }
+
+  function addRequester() {
+    setRequesters((prev) => [...prev, { name: "", document: "", company: "" }])
+  }
+
+  function updateRequester(index: number, key: keyof Requester, value: string) {
+    setRequesters((prev) =>
+      prev.map((r, i) => (i === index ? { ...r, [key]: value } : r))
+    )
+  }
+
+  function removeRequester(index: number) {
+    setRequesters((prev) => prev.filter((_, i) => i !== index))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -83,6 +118,7 @@ export function EditProtocolButton({ protocolId, current }: EditProtocolButtonPr
         deadlineAt: deadlineAt
           ? new Date(deadlineAt + "T00:00:00").toISOString()
           : "",
+        requesters: requesters.filter((r) => r.name.trim()),
       }
 
       const res = await fetch(`/api/protocols/${protocolId}`, {
@@ -117,8 +153,8 @@ export function EditProtocolButton({ protocolId, current }: EditProtocolButtonPr
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
-          <div className="bg-card rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card">
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-border">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card z-10">
               <h2 className="text-base font-semibold">Editar Protocolo</h2>
               <button
                 onClick={handleClose}
@@ -155,14 +191,10 @@ export function EditProtocolButton({ protocolId, current }: EditProtocolButtonPr
                 <div className="space-y-2">
                   <Label>Tipo</Label>
                   <Select value={type} onValueChange={setType} disabled={loading}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(Object.keys(PROTOCOL_TYPE_LABELS) as ProtocolType[]).map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {PROTOCOL_TYPE_LABELS[t]}
-                        </SelectItem>
+                        <SelectItem key={t} value={t}>{PROTOCOL_TYPE_LABELS[t]}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -171,14 +203,10 @@ export function EditProtocolButton({ protocolId, current }: EditProtocolButtonPr
                 <div className="space-y-2">
                   <Label>Prioridade</Label>
                   <Select value={priority} onValueChange={setPriority} disabled={loading}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(Object.keys(PROTOCOL_PRIORITY_LABELS) as ProtocolPriority[]).map((p) => (
-                        <SelectItem key={p} value={p}>
-                          {PROTOCOL_PRIORITY_LABELS[p]}
-                        </SelectItem>
+                        <SelectItem key={p} value={p}>{PROTOCOL_PRIORITY_LABELS[p]}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -204,6 +232,83 @@ export function EditProtocolButton({ protocolId, current }: EditProtocolButtonPr
                 )}
               </div>
 
+              {/* Requesters */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Interessados</Label>
+                  <button
+                    type="button"
+                    onClick={addRequester}
+                    disabled={loading}
+                    className="flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Adicionar
+                  </button>
+                </div>
+
+                {requesters.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-1">
+                    Nenhum interessado. Clique em "Adicionar" para incluir.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {requesters.map((r, i) => (
+                      <div
+                        key={i}
+                        className="p-3 border border-border rounded-lg space-y-2 bg-muted/20"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                            Interessado {i + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeRequester(i)}
+                            disabled={loading}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="col-span-2 space-y-1">
+                            <Label className="text-xs">Nome *</Label>
+                            <Input
+                              placeholder="Nome completo"
+                              value={r.name}
+                              onChange={(e) => updateRequester(i, "name", e.target.value)}
+                              className="h-8 text-sm"
+                              disabled={loading}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">CPF / CNPJ</Label>
+                            <Input
+                              placeholder="000.000.000-00"
+                              value={r.document}
+                              onChange={(e) => updateRequester(i, "document", e.target.value)}
+                              className="h-8 text-sm"
+                              disabled={loading}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Empresa</Label>
+                            <Input
+                              placeholder="Opcional"
+                              value={r.company}
+                              onChange={(e) => updateRequester(i, "company", e.target.value)}
+                              className="h-8 text-sm"
+                              disabled={loading}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label>Notas Internas</Label>
                 <Textarea
@@ -220,7 +325,7 @@ export function EditProtocolButton({ protocolId, current }: EditProtocolButtonPr
                 </div>
               )}
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-1">
                 <Button
                   type="submit"
                   disabled={loading || !title.trim() || !description.trim()}

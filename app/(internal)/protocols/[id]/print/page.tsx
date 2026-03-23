@@ -7,6 +7,7 @@ import {
   PROTOCOL_PRIORITY_LABELS,
   PROTOCOL_TYPE_LABELS,
   MOVEMENT_TYPE_LABELS,
+  DOCUMENT_CATEGORY_LABELS,
 } from "@/lib/utils/labels"
 import { PrintActions } from "@/components/protocols/PrintActions"
 
@@ -181,6 +182,7 @@ export default async function ProtocolPrintPage({
               <thead>
                 <tr className="border-b border-gray-300">
                   <th className="text-left py-1.5 pr-2 font-semibold">Arquivo</th>
+                  <th className="text-left py-1.5 pr-2 font-semibold">Categoria</th>
                   <th className="text-left py-1.5 pr-2 font-semibold">Visibilidade</th>
                   <th className="text-left py-1.5 pr-2 font-semibold">Enviado por</th>
                   <th className="text-left py-1.5 font-semibold">Data</th>
@@ -189,7 +191,17 @@ export default async function ProtocolPrintPage({
               <tbody>
                 {protocol.documents.map((doc) => (
                   <tr key={doc.id} className="border-b border-gray-100">
-                    <td className="py-1.5 pr-2">{doc.originalName}</td>
+                    <td className="py-1.5 pr-2">
+                      <span className="font-medium">{doc.originalName}</span>
+                      {doc.fileHash && (
+                        <span className="block text-gray-400 font-mono text-[10px]">
+                          {doc.fileHash.slice(0, 16)}…
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-1.5 pr-2">
+                      {doc.category ? (DOCUMENT_CATEGORY_LABELS[doc.category] ?? doc.category) : "—"}
+                    </td>
                     <td className="py-1.5 pr-2">
                       {doc.visibility === "INTERNAL" ? "Interno" : "Restrito"}
                     </td>

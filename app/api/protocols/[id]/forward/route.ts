@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth/auth"
 import { forwardProtocolValidator } from "@/validators/protocol.validator"
 import { ProtocolService } from "@/services/protocol.service"
+import { NotificationService } from "@/services/notification.service"
 import { canForwardProtocol } from "@/lib/permissions"
+import { prisma } from "@/lib/prisma"
 
 export async function POST(
   req: NextRequest,
@@ -26,6 +28,11 @@ export async function POST(
   }
 
   try {
+    const protocol = await prisma.protocol.findUnique({
+      where: { id },
+      select: { number: true, title: true },
+    })
+
     await ProtocolService.forward(
       id,
       {
@@ -39,6 +46,21 @@ export async function POST(
       },
       session.user.id
     )
+
+    if (protocol) {
+      await NotificationService.createForSecretariat(
+        parsed.data.toSecretariatId,
+        {
+          type: "PROTOCOL_FORWARDED",
+          title: `Protocolo encaminhado: ${protocol.number}`,
+          body: protocol.title,
+          entityType: "Protocol",
+          entityId: id,
+        },
+        session.user.id
+      )
+    }
+
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error("[POST /api/protocols/[id]/forward]", error)

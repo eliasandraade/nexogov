@@ -77,6 +77,11 @@ export const updateProtocolMetadataValidator = z.object({
   priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional(),
   internalNotes: z.string().max(2000).optional().or(z.literal("")),
   deadlineAt: z.string().datetime().optional().or(z.literal("")),
+  requesters: z.array(z.object({
+    name: z.string().min(1).max(200),
+    document: z.string().max(30).optional().or(z.literal("")),
+    company: z.string().max(200).optional().or(z.literal("")),
+  })).optional(),
 })
 
 export type UpdateProtocolMetadataInput = z.infer<typeof updateProtocolMetadataValidator>

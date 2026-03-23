@@ -39,7 +39,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Protocolo encerrado ou arquivado" }, { status: 400 })
     }
 
-    const { deadlineAt, ...rest } = parsed.data
+    const { deadlineAt, requesters, ...rest } = parsed.data
 
     const deadlineValue =
       deadlineAt === ""
@@ -53,6 +53,7 @@ export async function PATCH(
       data: {
         ...rest,
         ...(deadlineValue !== undefined ? { deadlineAt: deadlineValue } : {}),
+        ...(requesters !== undefined ? { requesters } : {}),
       },
     })
 

@@ -113,6 +113,11 @@ export default async function ProtocolDetailPage({
                     priority: protocol.priority,
                     internalNotes: protocol.internalNotes,
                     deadlineAt: protocol.deadlineAt,
+                    requesters: Array.isArray(protocol.requesters)
+                      ? (protocol.requesters as Array<{ name: string; document?: string; company?: string }>)
+                      : protocol.requesterName
+                        ? [{ name: protocol.requesterName, document: protocol.requesterDocument ?? undefined }]
+                        : [],
                   }}
                 />
                 <ForwardProtocolButton protocolId={protocol.id} />
