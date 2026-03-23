@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Send, Loader2, X, Plus, Trash2 } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 
 interface Secretariat {
@@ -49,6 +50,7 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
   const [toSectorId, setToSectorId] = useState("")
   const [description, setDescription] = useState("")
   const [notes, setNotes] = useState("")
+  const [deadlineAt, setDeadlineAt] = useState("")
   const [ccDestinations, setCcDestinations] = useState<CCDestination[]>([])
 
   useEffect(() => {
@@ -95,6 +97,7 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
           notes: notes || undefined,
           toSecretariatId,
           toSectorId: toSectorId || undefined,
+          deadlineAt: deadlineAt ? new Date(deadlineAt).toISOString() : undefined,
           ccDestinations: ccDestinations
             .filter((cc) => cc.toSecretariatId)
             .map((cc) => ({
@@ -127,6 +130,7 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
     setToSectorId("")
     setDescription("")
     setNotes("")
+    setDeadlineAt("")
     setCcDestinations([])
     setError(null)
   }
@@ -262,6 +266,16 @@ export function ForwardProtocolButton({ protocolId }: ForwardProtocolButtonProps
               </Button>
 
               <div className="border-t border-border pt-4 space-y-3">
+                <div className="space-y-2">
+                  <Label>Novo Prazo (opcional)</Label>
+                  <Input
+                    type="date"
+                    value={deadlineAt}
+                    onChange={(e) => setDeadlineAt(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                  <p className="text-xs text-muted-foreground">Deixe em branco para manter o prazo atual.</p>
+                </div>
                 <div className="space-y-2">
                   <Label>Descrição do Encaminhamento *</Label>
                   <Textarea

@@ -18,8 +18,8 @@ interface PublicDocument {
   createdAt: string
 }
 
-export function DocumentConsultaForm() {
-  const [number, setNumber] = useState("")
+export function DocumentConsultaForm({ initialNumber = "" }: { initialNumber?: string }) {
+  const [number, setNumber] = useState(initialNumber)
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)

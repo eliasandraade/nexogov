@@ -145,8 +145,22 @@ export function UserModal({ open, onClose, user }: UserModalProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required={!isEdit}
-                placeholder={isEdit ? "••••••" : ""}
+                placeholder={isEdit ? "deixe em branco para manter" : ""}
               />
+              {password && (
+                <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
+                  {[
+                    { ok: password.length >= 8, label: "8+ caracteres" },
+                    { ok: /[A-Z]/.test(password), label: "Maiúscula" },
+                    { ok: /[0-9]/.test(password), label: "Número" },
+                    { ok: /[^A-Za-z0-9]/.test(password), label: "Caractere especial" },
+                  ].map(({ ok, label }) => (
+                    <p key={label} className={`text-xs flex items-center gap-1 ${ok ? "text-green-600" : "text-muted-foreground"}`}>
+                      <span>{ok ? "✓" : "○"}</span> {label}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="space-y-1">
               <Label>Perfil</Label>

@@ -18,6 +18,7 @@ import { ProtocolTimeline } from "@/components/timeline/ProtocolTimeline"
 import { ForwardProtocolButton } from "@/components/protocols/ForwardProtocolButton"
 import { DocumentUploadForm } from "@/components/documents/DocumentUploadForm"
 import { ProtocolStatusButton } from "@/components/protocols/ProtocolStatusButton"
+import { AddMovementButton } from "@/components/protocols/AddMovementButton"
 import { MetricsService } from "@/services/metrics.service"
 import { FileText, User, Calendar, MapPin, Clock, Download, Timer, Printer } from "lucide-react"
 import Link from "next/link"
@@ -102,6 +103,7 @@ export default async function ProtocolDetailPage({
             {canForward && protocol.status !== "CLOSED" && protocol.status !== "ARCHIVED" && (
               <>
                 <ForwardProtocolButton protocolId={protocol.id} />
+                <AddMovementButton protocolId={protocol.id} />
                 <DocumentUploadForm protocolId={protocol.id} />
                 <ProtocolStatusButton protocolId={protocol.id} currentStatus={protocol.status} />
               </>

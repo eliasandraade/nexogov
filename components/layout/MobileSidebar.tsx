@@ -9,9 +9,10 @@ interface MobileSidebarProps {
   userRole: UserRole
   userName: string
   secretariatName?: string | null
+  pendingCount?: number
 }
 
-export function MobileSidebar({ userRole, userName, secretariatName }: MobileSidebarProps) {
+export function MobileSidebar({ userRole, userName, secretariatName, pendingCount = 0 }: MobileSidebarProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -44,6 +45,7 @@ export function MobileSidebar({ userRole, userName, secretariatName }: MobileSid
                 userRole={userRole}
                 userName={userName}
                 secretariatName={secretariatName}
+                pendingCount={pendingCount}
               />
             </div>
           </div>

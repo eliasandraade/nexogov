@@ -92,9 +92,10 @@ interface SidebarProps {
   userRole: UserRole
   userName: string
   secretariatName?: string | null
+  pendingCount?: number
 }
 
-export function Sidebar({ userRole, userName, secretariatName }: SidebarProps) {
+export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 }: SidebarProps) {
   const pathname = usePathname()
 
   const visibleItems = navItems.filter(
@@ -136,6 +137,11 @@ export function Sidebar({ userRole, userName, secretariatName }: SidebarProps) {
             >
               <Icon className="h-4 w-4 flex-shrink-0" />
               <span className="flex-1">{item.label}</span>
+              {item.href === "/protocols" && pendingCount > 0 && (
+                <span className="ml-auto bg-white/20 text-white text-[10px] font-semibold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-tight">
+                  {pendingCount > 99 ? "99+" : pendingCount}
+                </span>
+              )}
               {isActive && <ChevronRight className="h-3 w-3 opacity-60" />}
             </Link>
           )

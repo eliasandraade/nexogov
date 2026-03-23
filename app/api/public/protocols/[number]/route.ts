@@ -31,8 +31,10 @@ export async function GET(
       type: true,
       status: true,
       createdAt: true,
+      deadlineAt: true,
       currentSecretariat: { select: { name: true, code: true } },
       currentSector: { select: { name: true } },
+      _count: { select: { documents: true } },
       movements: {
         orderBy: { createdAt: "asc" },
         select: {

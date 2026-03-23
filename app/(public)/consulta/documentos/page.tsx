@@ -5,7 +5,13 @@ export const metadata = {
   description: "Acesse os documentos do seu protocolo informando o número e a senha.",
 }
 
-export default function DocumentosPage() {
+export default async function DocumentosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ numero?: string }>
+}) {
+  const { numero } = await searchParams
+
   return (
     <div className="min-h-screen bg-[#f8f9fb]">
       <header className="bg-[#1e3a5f] text-white py-4 px-6 shadow-sm">
@@ -31,7 +37,7 @@ export default function DocumentosPage() {
           </p>
         </div>
 
-        <DocumentConsultaForm />
+        <DocumentConsultaForm initialNumber={numero ?? ""} />
       </main>
 
       <footer className="mt-auto border-t border-border py-6 text-center text-xs text-muted-foreground">

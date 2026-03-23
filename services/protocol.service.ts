@@ -91,6 +91,7 @@ export class ProtocolService {
       toOrganId?: string
       toSectorId?: string
       ccDestinations?: Array<{ toSecretariatId: string; toSectorId?: string }>
+      deadlineAt?: string
     },
     performedById: string
   ) {
@@ -115,6 +116,7 @@ export class ProtocolService {
           currentSecretariatId: input.toSecretariatId,
           currentOrganId: input.toOrganId || null,
           currentSectorId: input.toSectorId || null,
+          ...(input.deadlineAt ? { deadlineAt: new Date(input.deadlineAt) } : {}),
         },
       })
 

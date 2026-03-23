@@ -56,6 +56,7 @@ export const forwardProtocolValidator = z.object({
     toSecretariatId: z.string().cuid(),
     toSectorId: z.string().cuid().optional().or(z.literal("")),
   })).optional().default([]),
+  deadlineAt: z.string().datetime().optional().or(z.literal("")),
 })
 
 export type ForwardProtocolInput = z.infer<typeof forwardProtocolValidator>

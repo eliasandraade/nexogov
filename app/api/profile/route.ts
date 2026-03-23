@@ -4,10 +4,18 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
 
+const strongPassword = z
+  .string()
+  .min(8, "Mínimo 8 caracteres")
+  .max(100)
+  .regex(/[A-Z]/, "Deve conter ao menos uma letra maiúscula")
+  .regex(/[0-9]/, "Deve conter ao menos um número")
+  .regex(/[^A-Za-z0-9]/, "Deve conter ao menos um caractere especial")
+
 const updateProfileValidator = z.object({
   name: z.string().min(3).max(200).optional(),
   currentPassword: z.string().optional(),
-  newPassword: z.string().min(6).max(100).optional(),
+  newPassword: strongPassword.optional(),
 })
 
 export async function PATCH(req: NextRequest) {

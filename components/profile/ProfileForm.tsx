@@ -26,8 +26,8 @@ export function ProfileForm() {
       setError("A nova senha e a confirmação não coincidem.")
       return
     }
-    if (newPassword.length < 6) {
-      setError("A nova senha deve ter pelo menos 6 caracteres.")
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+      setError("A senha deve ter no mínimo 8 caracteres, uma letra maiúscula, um número e um caractere especial.")
       return
     }
 
@@ -78,8 +78,22 @@ export function ProfileForm() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
             />
+            {newPassword && (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1.5">
+                {[
+                  { ok: newPassword.length >= 8, label: "8+ caracteres" },
+                  { ok: /[A-Z]/.test(newPassword), label: "Maiúscula" },
+                  { ok: /[0-9]/.test(newPassword), label: "Número" },
+                  { ok: /[^A-Za-z0-9]/.test(newPassword), label: "Caractere especial" },
+                ].map(({ ok, label }) => (
+                  <p key={label} className={`text-xs flex items-center gap-1 ${ok ? "text-green-600" : "text-muted-foreground"}`}>
+                    <span>{ok ? "✓" : "○"}</span> {label}
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
           <div className="space-y-1">
             <Label>Confirmar nova senha</Label>

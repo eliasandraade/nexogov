@@ -13,7 +13,7 @@ import {
   PROTOCOL_STATUS_VARIANTS,
   PROTOCOL_TYPE_LABELS,
 } from "@/lib/utils/labels"
-import { Loader2, Search, MapPin } from "lucide-react"
+import { Loader2, Search, MapPin, Calendar, FileText } from "lucide-react"
 
 interface PublicProtocol {
   number: string
@@ -21,8 +21,10 @@ interface PublicProtocol {
   type: string
   status: string
   createdAt: string
+  deadlineAt: string | null
   currentSecretariat: { name: string; code: string }
   currentSector: { name: string } | null
+  _count: { documents: number }
   movements: Array<{
     id: string
     type: string
@@ -141,7 +143,7 @@ export function ConsultaForm() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
@@ -157,12 +159,33 @@ export function ConsultaForm() {
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
                     Data de Abertura
                   </p>
                   <p className="font-medium mt-1">
                     {formatDate(new Date(protocol.createdAt))}
                   </p>
+                  {protocol.deadlineAt && (
+                    <p className={`text-xs mt-0.5 ${new Date(protocol.deadlineAt) < new Date() ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                      Prazo: {formatDate(new Date(protocol.deadlineAt))}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    Documentos
+                  </p>
+                  <p className="font-medium mt-1">{protocol._count.documents}</p>
+                  {protocol._count.documents > 0 && (
+                    <a
+                      href={`/consulta/documentos?numero=${encodeURIComponent(protocol.number)}`}
+                      className="text-xs text-primary underline mt-0.5 block"
+                    >
+                      Acessar com senha →
+                    </a>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -185,13 +208,18 @@ export function ConsultaForm() {
             </CardContent>
           </Card>
 
-          <p className="text-center text-xs text-muted-foreground">
-            Para acessar documentos vinculados a este protocolo,{" "}
-            <a href="/consulta/documentos" className="underline text-primary">
-              clique aqui
-            </a>{" "}
-            e informe também a senha do protocolo.
-          </p>
+          {protocol._count.documents > 0 && (
+            <p className="text-center text-xs text-muted-foreground">
+              Para acessar os documentos,{" "}
+              <a
+                href={`/consulta/documentos?numero=${encodeURIComponent(protocol.number)}`}
+                className="underline text-primary"
+              >
+                clique aqui
+              </a>{" "}
+              e informe a senha do protocolo.
+            </p>
+          )}
         </div>
       )}
     </div>
