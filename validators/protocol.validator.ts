@@ -82,6 +82,7 @@ export const updateProtocolMetadataValidator = z.object({
     document: z.string().max(30).optional().or(z.literal("")),
     company: z.string().max(200).optional().or(z.literal("")),
   })).optional(),
+  tags: z.array(z.string().min(1).max(50)).max(10).optional(),
 })
 
 export type UpdateProtocolMetadataInput = z.infer<typeof updateProtocolMetadataValidator>

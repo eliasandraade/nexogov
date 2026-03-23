@@ -21,6 +21,8 @@ import { DocumentUploadForm } from "@/components/documents/DocumentUploadForm"
 import { ProtocolStatusButton } from "@/components/protocols/ProtocolStatusButton"
 import { AddMovementButton } from "@/components/protocols/AddMovementButton"
 import { EditProtocolButton } from "@/components/protocols/EditProtocolButton"
+import { CloneProtocolButton } from "@/components/protocols/CloneProtocolButton"
+import { TagsEditor } from "@/components/protocols/TagsEditor"
 import { MetricsService } from "@/services/metrics.service"
 import { FileText, User, Calendar, MapPin, Clock, Download, Timer, Printer, MessageSquare, ShieldCheck } from "lucide-react"
 import Link from "next/link"
@@ -126,6 +128,9 @@ export default async function ProtocolDetailPage({
                 <ProtocolStatusButton protocolId={protocol.id} currentStatus={protocol.status} />
               </>
             )}
+            {canForward && (
+              <CloneProtocolButton protocolId={protocol.id} />
+            )}
             <Link href={`/protocols/${protocol.id}/print`} target="_blank">
               <Button variant="outline" size="sm">
                 <Printer className="h-4 w-4" />
@@ -143,10 +148,15 @@ export default async function ProtocolDetailPage({
               <CardHeader>
                 <CardTitle className="text-sm">Descrição</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                   {protocol.description}
                 </p>
+                <TagsEditor
+                  protocolId={protocol.id}
+                  tags={protocol.tags ?? []}
+                  canEdit={canForward && protocol.status !== "CLOSED" && protocol.status !== "ARCHIVED"}
+                />
               </CardContent>
             </Card>
 

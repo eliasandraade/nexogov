@@ -121,6 +121,18 @@ export default async function ProtocolPrintPage({
           <p className="text-sm whitespace-pre-wrap">{protocol.description}</p>
         </div>
 
+        {/* Tags */}
+        {protocol.tags && protocol.tags.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-sm font-bold uppercase border-b border-gray-300 pb-1 mb-2">Tags</h2>
+            <div className="flex flex-wrap gap-1">
+              {protocol.tags.map(tag => (
+                <span key={tag} className="text-xs border border-gray-300 rounded px-2 py-0.5">{tag}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Requesters */}
         {requesters.length > 0 && (
           <div className="mb-6">

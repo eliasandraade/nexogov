@@ -104,6 +104,7 @@ enum AuditAction {
   LOGOUT
   PROTOCOL_CREATED
   PROTOCOL_UPDATED
+  PROTOCOL_CLONED
   PROTOCOL_STATUS_CHANGED
   PROTOCOL_FORWARDED
   DOCUMENT_ATTACHED
@@ -290,7 +291,8 @@ model Protocol {
   requesterDocument String?
   requesters        Json    @default("[]")
 
-  internalNotes String? @db.Text
+  internalNotes String?   @db.Text
+  tags          String[]  @default([])
 
   // Origin (immutable after creation)
   originSecretariatId String
