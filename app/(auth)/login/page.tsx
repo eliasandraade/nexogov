@@ -1,4 +1,3 @@
-import Image from "next/image"
 import { LoginForm } from "@/components/forms/LoginForm"
 import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
@@ -30,13 +29,10 @@ export default async function LoginPage() {
 
         {/* Logo */}
         <div className="relative z-10">
-          <Image
+          <img
             src="/logos/logo-dark.png"
             alt="NexoGov"
-            width={180}
-            height={44}
             className="object-contain object-left h-11 w-auto"
-            priority
           />
         </div>
 
@@ -79,13 +75,10 @@ export default async function LoginPage() {
         <div className="w-full max-w-[360px] space-y-8">
           {/* Mobile logo */}
           <div className="lg:hidden">
-            <Image
+            <img
               src="/logos/logo-light.png"
               alt="NexoGov"
-              width={160}
-              height={40}
               className="object-contain object-left h-10 w-auto"
-              priority
             />
           </div>
 

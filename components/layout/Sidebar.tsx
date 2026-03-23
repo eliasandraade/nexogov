@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
@@ -118,13 +117,10 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
         style={{ borderBottom: "1px solid var(--sidebar-border)" }}
       >
         <Link href="/dashboard" className="flex items-center">
-          <Image
+          <img
             src="/logos/logo-dark.png"
             alt="NexoGov"
-            width={148}
-            height={36}
             className="object-contain object-left h-9 w-auto"
-            priority
           />
         </Link>
       </div>
