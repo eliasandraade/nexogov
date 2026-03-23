@@ -117,11 +117,14 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
         style={{ borderBottom: "1px solid var(--sidebar-border)" }}
       >
         <Link href="/dashboard" className="flex items-center">
-          <img
-            src="/logos/logo-dark.png"
-            alt="NexoGov"
-            className="object-contain object-left h-9 w-auto"
-          />
+          {/* 2048×2048 canvas — zoom in on center content */}
+          <div style={{ width: 180, height: 36, overflow: "hidden", flexShrink: 0 }}>
+            <img
+              src="/logos/logo-dark.png"
+              alt="NexoGov"
+              style={{ width: 180, height: 180, display: "block", marginTop: -72 }}
+            />
+          </div>
         </Link>
       </div>
 
