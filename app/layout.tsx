@@ -15,9 +15,23 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "NexoGov — Conectando processos. Transformando gestão.",
+  title: {
+    default: "NexoGov",
+    template: "%s — NexoGov",
+  },
   description:
     "Sistema institucional de tramitação processual municipal. Rastreabilidade completa, controle de acesso e gestão orientada a dados.",
+  icons: {
+    icon: "/logos/logo-icon-light.png",
+    shortcut: "/logos/logo-icon-light.png",
+    apple: "/logos/logo-icon-light.png",
+  },
+  openGraph: {
+    title: "NexoGov — Conectando processos. Transformando gestão.",
+    description: "Sistema institucional de tramitação processual municipal.",
+    type: "website",
+    images: [{ url: "/logos/logo-light.png", width: 2048, height: 2048 }],
+  },
 }
 
 export default function RootLayout({

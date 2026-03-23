@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
@@ -112,16 +113,20 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 w-64 bg-sidebar flex flex-col">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-[18px]" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
-        <div className="w-8 h-8 bg-white/[0.15] rounded-lg flex items-center justify-center flex-shrink-0 ring-1 ring-white/10">
-          <span className="font-bold text-sm text-white tracking-tight">N</span>
-        </div>
-        <div>
-          <p className="font-semibold text-sm text-white leading-none tracking-wide">NexoGov</p>
-          <p className="text-[11px] mt-0.5 leading-none" style={{ color: "var(--sidebar-muted)" }}>
-            Gestão Municipal
-          </p>
-        </div>
+      <div
+        className="flex items-center px-5 py-[14px]"
+        style={{ borderBottom: "1px solid var(--sidebar-border)" }}
+      >
+        <Link href="/dashboard" className="flex items-center">
+          <Image
+            src="/logos/logo-dark.png"
+            alt="NexoGov"
+            width={148}
+            height={36}
+            className="object-contain object-left h-9 w-auto"
+            priority
+          />
+        </Link>
       </div>
 
       {/* Navigation */}
@@ -139,23 +144,23 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
               href={item.href}
               className={cn(
                 "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all relative group",
-                isActive
-                  ? "text-white font-medium"
-                  : "hover:text-white transition-colors"
+                isActive ? "text-white font-medium" : ""
               )}
               style={
                 isActive
-                  ? { backgroundColor: "var(--sidebar-active)" }
+                  ? { backgroundColor: "var(--sidebar-active)", color: "white" }
                   : { color: "var(--sidebar-muted)" }
               }
               onMouseEnter={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLElement).style.backgroundColor = "var(--sidebar-accent)"
+                  ;(e.currentTarget as HTMLElement).style.color = "white"
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLElement).style.backgroundColor = ""
+                  ;(e.currentTarget as HTMLElement).style.color = "var(--sidebar-muted)"
                 }
               }}
             >
@@ -184,7 +189,10 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
       {/* User + footer */}
       <div className="px-3 pb-3 pt-2 space-y-1" style={{ borderTop: "1px solid var(--sidebar-border)" }}>
         {/* User info */}
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-md" style={{ backgroundColor: "var(--sidebar-accent)" }}>
+        <div
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md"
+          style={{ backgroundColor: "var(--sidebar-accent)" }}
+        >
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[11px] font-bold"
             style={{ backgroundColor: "var(--sidebar-active)" }}
