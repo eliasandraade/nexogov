@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth/auth"
 import { prisma } from "@/lib/prisma"
 import { createUserValidator } from "@/validators/user.validator"
-import { canManageUsers } from "@/lib/permissions"
+import { canManageUsers, canManageSecretariatUsers, SECRETARIAT_ASSIGNABLE_ROLES } from "@/lib/permissions"
 import { logAudit } from "@/lib/audit/log"
 import bcrypt from "bcryptjs"
 
@@ -12,7 +12,12 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 })
   }
 
+  const where = canManageSecretariatUsers(session.user.role) && session.user.secretariatId
+    ? { secretariatId: session.user.secretariatId }
+    : undefined
+
   const users = await prisma.user.findMany({
+    where,
     orderBy: { name: "asc" },
     select: {
       id: true,
@@ -42,7 +47,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { name, email, password, role, secretariatId, organId, sectorId } = parsed.data
+  let { name, email, password, role, secretariatId, organId, sectorId } = parsed.data
+
+  if (canManageSecretariatUsers(session.user.role)) {
+    // SECRETARIO: force their own secretariat and restrict assignable roles
+    secretariatId = session.user.secretariatId ?? secretariatId
+    if (!SECRETARIAT_ASSIGNABLE_ROLES.includes(role)) {
+      return NextResponse.json({ error: "Perfil não permitido para esta operação" }, { status: 403 })
+    }
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {

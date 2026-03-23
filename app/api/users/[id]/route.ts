@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth/auth"
 import { prisma } from "@/lib/prisma"
 import { updateUserValidator } from "@/validators/user.validator"
-import { canManageUsers } from "@/lib/permissions"
+import { canManageUsers, canManageSecretariatUsers, SECRETARIAT_ASSIGNABLE_ROLES } from "@/lib/permissions"
 import { logAudit } from "@/lib/audit/log"
 import bcrypt from "bcryptjs"
 
@@ -16,6 +16,17 @@ export async function PATCH(
   }
 
   const { id } = await params
+
+  if (canManageSecretariatUsers(session.user.role)) {
+    const targetUser = await prisma.user.findUnique({
+      where: { id },
+      select: { secretariatId: true },
+    })
+    if (!targetUser || targetUser.secretariatId !== session.user.secretariatId) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 403 })
+    }
+  }
+
   const body = await req.json()
   const parsed = updateUserValidator.safeParse(body)
   if (!parsed.success) {
@@ -24,11 +35,27 @@ export async function PATCH(
 
   const { password, secretariatId, organId, sectorId, ...rest } = parsed.data
 
+  if (canManageSecretariatUsers(session.user.role)) {
+    if (rest.role && !SECRETARIAT_ASSIGNABLE_ROLES.includes(rest.role)) {
+      return NextResponse.json({ error: "Perfil não permitido para esta operação" }, { status: 403 })
+    }
+  }
+
   const data: Record<string, unknown> = {
     ...rest,
-    secretariatId: secretariatId === "" ? null : secretariatId,
-    organId: organId === "" ? null : organId,
-    sectorId: sectorId === "" ? null : sectorId,
+    ...(canManageSecretariatUsers(session.user.role)
+      ? {}
+      : {
+          secretariatId: secretariatId === "" ? null : secretariatId,
+          organId: organId === "" ? null : organId,
+          sectorId: sectorId === "" ? null : sectorId,
+        }),
+  }
+
+  if (!canManageSecretariatUsers(session.user.role)) {
+    // admin path: allow organ/sector changes
+    data.organId = organId === "" ? null : organId
+    data.sectorId = sectorId === "" ? null : sectorId
   }
 
   if (password) {

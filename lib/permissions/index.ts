@@ -16,6 +16,29 @@ const CREATOR_ROLES = new Set<UserRole>([
 ])
 // CONSELHEIRO / OPERADOR_SETOR can view but not create
 
+export const SECRETARIAT_SCOPED_ROLES = new Set<UserRole>([
+  "SECRETARIO",
+  "GESTOR",
+  "SERVIDOR_PUBLICO",
+  "CONSELHEIRO",
+  "PROTOCOLO",
+  "OPERADOR_SETOR",
+])
+
+export const SECRETARIAT_ASSIGNABLE_ROLES: UserRole[] = [
+  "GESTOR",
+  "SERVIDOR_PUBLICO",
+  "CONSELHEIRO",
+]
+
+export function isSecretariatScoped(role: UserRole): boolean {
+  return SECRETARIAT_SCOPED_ROLES.has(role)
+}
+
+export function canManageSecretariatUsers(role: UserRole): boolean {
+  return role === "SECRETARIO"
+}
+
 export function canCreateProtocol(role: UserRole): boolean {
   return CREATOR_ROLES.has(role)
 }
@@ -25,7 +48,7 @@ export function canForwardProtocol(role: UserRole): boolean {
 }
 
 export function canManageUsers(role: UserRole): boolean {
-  return ADMIN_ROLES.has(role)
+  return ADMIN_ROLES.has(role) || role === "SECRETARIO"
 }
 
 export function canManageOrganizationalStructure(role: UserRole): boolean {

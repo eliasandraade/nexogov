@@ -10,12 +10,16 @@ import {
 } from "@/lib/utils/labels"
 import {
   FileText, Clock, CheckCircle, AlertTriangle, TrendingUp,
-  ArrowRight, Shield, Activity,
+  ArrowRight, Shield, Activity, Users, Inbox,
 } from "lucide-react"
 import Link from "next/link"
 import { StatusChart } from "@/components/dashboard/StatusChart"
 import { TemporalChart } from "@/components/dashboard/TemporalChart"
 import { FlowMatrix } from "@/components/dashboard/FlowMatrix"
+import { DashboardTabNav } from "@/components/dashboard/DashboardTabNav"
+import { SecretariatSelector } from "@/components/dashboard/SecretariatSelector"
+import { isSecretariatScoped } from "@/lib/permissions"
+import { prisma } from "@/lib/prisma"
 
 const STATUS_COLORS: Record<string, string> = {
   OPEN: "#3b82f6",
@@ -26,8 +30,283 @@ const STATUS_COLORS: Record<string, string> = {
   ARCHIVED: "#6b7280",
 }
 
-export default async function DashboardPage() {
+type ScopedMetrics = Awaited<ReturnType<typeof DashboardService.getMetricsForSecretariat>>
+
+function ScopedDashboard({
+  data,
+  secretariatName,
+  secretariatCode,
+}: {
+  data: ScopedMetrics
+  secretariatName: string
+  secretariatCode: string
+}) {
+  const chartData = [
+    { label: "Abertos", value: data.openCount, color: STATUS_COLORS.OPEN },
+    { label: "Andamento", value: data.inProgressCount, color: STATUS_COLORS.IN_PROGRESS },
+    { label: "Pendentes", value: data.pendingCount, color: STATUS_COLORS.PENDING },
+    { label: "Encerrados", value: data.closedCount, color: STATUS_COLORS.CLOSED },
+    { label: "Arquivados", value: data.archivedCount, color: STATUS_COLORS.ARCHIVED },
+  ].filter((d) => d.value > 0)
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Envolvidos</span>
+              <FileText className="h-4 w-4 text-muted-foreground/40" />
+            </div>
+            <p className="text-3xl font-bold">{data.totalProtocols}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              +{data.recentProtocols} nos últimos 30 dias
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Na Fila</span>
+              <Inbox className="h-4 w-4 text-blue-300" />
+            </div>
+            <p className="text-3xl font-bold text-blue-600">{data.inQueueCount}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Localização atual: {secretariatCode}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Atrasados</span>
+              <AlertTriangle className="h-4 w-4 text-destructive/50" />
+            </div>
+            <p className={`text-3xl font-bold ${data.overdueProtocols > 0 ? "text-destructive" : "text-green-600"}`}>
+              {data.overdueProtocols}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Com prazo vencido
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Encerrados</span>
+              <CheckCircle className="h-4 w-4 text-green-300" />
+            </div>
+            <p className="text-3xl font-bold text-green-600">{data.closedCount}</p>
+            {data.avgTramitationDays !== null && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Média: {data.avgTramitationDays} dias
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Servidores</span>
+              <Users className="h-4 w-4 text-muted-foreground/40" />
+            </div>
+            <p className="text-3xl font-bold">{data.staffCount}</p>
+            <p className="text-xs text-muted-foreground mt-1">Ativos na secretaria</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Protocolos por Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <StatusChart data={chartData} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Fluxos Saindo desta Secretaria</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {data.topFlowsFromHere.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum encaminhamento registrado.</p>
+            ) : (
+              data.topFlowsFromHere.map((flow, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs py-1.5 border-b border-border last:border-0">
+                  <span className="font-medium text-primary w-16 flex-shrink-0">{secretariatCode}</span>
+                  <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                  <span className="font-medium flex-1">{flow.to?.code ?? "—"}</span>
+                  <span className="text-muted-foreground font-mono">{flow.count}x</span>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Temporal evolution */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Evolução Mensal (12 meses)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TemporalChart data={data.temporalData} />
+        </CardContent>
+      </Card>
+
+      {/* Recent audit log */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Atividade Recente
+            </CardTitle>
+            <Link href="/audit" className="text-xs text-primary hover:underline">
+              Ver tudo
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y divide-border">
+            {data.recentAuditLogs.length === 0 ? (
+              <p className="text-sm text-muted-foreground p-4">Nenhuma atividade registrada.</p>
+            ) : (
+              data.recentAuditLogs.map((log) => (
+                <div key={log.id} className="flex items-start gap-3 px-6 py-3 hover:bg-muted/30 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium">{log.action.replace(/_/g, " ")}</span>
+                      {log.entityType && (
+                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {log.entityType}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {log.user?.name ?? "Sistema"}
+                      {log.secretariat && ` · ${log.secretariat.code}`}
+                    </p>
+                  </div>
+                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                    {formatRelativeTime(log.createdAt)}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const session = await auth()
+  const role = session!.user.role
+  const userSecretariatId = session!.user.secretariatId ?? null
+
+  // Scoped user path
+  if (isSecretariatScoped(role)) {
+    if (!userSecretariatId) {
+      return (
+        <div>
+          <Topbar title="Dashboard" subtitle={`Bem-vindo, ${session?.user.name}`} />
+          <div className="p-6">
+            <p className="text-muted-foreground text-sm">
+              Sua conta não está vinculada a nenhuma secretaria. Entre em contato com o administrador do sistema.
+            </p>
+          </div>
+        </div>
+      )
+    }
+
+    const [data, secretariat] = await Promise.all([
+      DashboardService.getMetricsForSecretariat(userSecretariatId),
+      prisma.secretariat.findUnique({
+        where: { id: userSecretariatId },
+        select: { name: true, code: true },
+      }),
+    ])
+
+    const secName = secretariat?.name ?? "Secretaria"
+    const secCode = secretariat?.code ?? ""
+
+    return (
+      <div>
+        <Topbar
+          title="Dashboard"
+          subtitle={`${secCode} — ${secName}`}
+        />
+        <ScopedDashboard data={data} secretariatName={secName} secretariatCode={secCode} />
+      </div>
+    )
+  }
+
+  // Global/admin path
+  const params = await searchParams
+  const tab = typeof params.tab === "string" ? params.tab : undefined
+  const sid = typeof params.sid === "string" ? params.sid : undefined
+
+  if (tab === "secretaria") {
+    const secretariats = await prisma.secretariat.findMany({
+      where: { active: true },
+      select: { id: true, name: true, code: true },
+      orderBy: { name: "asc" },
+    })
+
+    if (sid) {
+      const [data, secretariat] = await Promise.all([
+        DashboardService.getMetricsForSecretariat(sid),
+        prisma.secretariat.findUnique({
+          where: { id: sid },
+          select: { name: true, code: true },
+        }),
+      ])
+
+      const secName = secretariat?.name ?? "Secretaria"
+      const secCode = secretariat?.code ?? ""
+
+      return (
+        <div>
+          <Topbar title="Dashboard" subtitle={`Bem-vindo, ${session?.user.name}`} />
+          <DashboardTabNav />
+          <div className="p-6 pb-2">
+            <SecretariatSelector secretariats={secretariats} selectedId={sid} />
+          </div>
+          <ScopedDashboard data={data} secretariatName={secName} secretariatCode={secCode} />
+        </div>
+      )
+    }
+
+    return (
+      <div>
+        <Topbar title="Dashboard" subtitle={`Bem-vindo, ${session?.user.name}`} />
+        <DashboardTabNav />
+        <div className="p-6">
+          <SecretariatSelector secretariats={secretariats} />
+          <p className="text-sm text-muted-foreground mt-4">
+            Selecione uma secretaria para ver os dados.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Global dashboard (default)
   const data = await DashboardService.getMetrics()
 
   const chartData = [
@@ -42,6 +321,7 @@ export default async function DashboardPage() {
   return (
     <div>
       <Topbar title="Dashboard" subtitle={`Bem-vindo, ${session?.user.name}`} />
+      <DashboardTabNav />
       <div className="p-6 space-y-6">
 
         {/* KPI Cards */}

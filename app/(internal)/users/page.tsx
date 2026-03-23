@@ -2,15 +2,12 @@ import { Topbar } from "@/components/layout/Topbar"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
-import { canManageUsers } from "@/lib/permissions"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { formatDate } from "@/lib/utils/format"
-import { USER_ROLE_LABELS } from "@/lib/utils/labels"
+import { canManageUsers, isSecretariatScoped } from "@/lib/permissions"
 import { UsersClient } from "@/components/users/UsersClient"
 
-async function getUsers() {
+async function getUsers(secretariatId?: string | null) {
   return prisma.user.findMany({
+    where: secretariatId ? { secretariatId } : undefined,
     orderBy: { name: "asc" },
     select: {
       id: true, name: true, email: true, role: true, active: true, createdAt: true,
@@ -33,13 +30,24 @@ export default async function UsersPage() {
   const session = await auth()
   if (!session || !canManageUsers(session.user.role)) redirect("/dashboard")
 
-  const [users, secretariats] = await Promise.all([getUsers(), getSecretariats()])
+  const isScoped = isSecretariatScoped(session.user.role)
+  const callerSecretariatId = session.user.secretariatId ?? undefined
+
+  const [users, secretariats] = await Promise.all([
+    getUsers(isScoped ? callerSecretariatId : undefined),
+    getSecretariats(),
+  ])
 
   return (
     <div>
       <Topbar title="Usuários" subtitle={`${users.length} usuários cadastrados`} />
       <div className="p-6">
-        <UsersClient users={users} secretariats={secretariats} />
+        <UsersClient
+          users={users}
+          secretariats={secretariats}
+          callerRole={session.user.role}
+          callerSecretariatId={callerSecretariatId}
+        />
       </div>
     </div>
   )

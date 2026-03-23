@@ -213,4 +213,164 @@ export class DashboardService {
       flowSecretariats: flowSecretariatsList,
     }
   }
+
+  static async getMetricsForSecretariat(secretariatId: string) {
+    const now = new Date()
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+    const involvementFilter = {
+      OR: [
+        { originSecretariatId: secretariatId },
+        { currentSecretariatId: secretariatId },
+        {
+          movements: {
+            some: {
+              OR: [
+                { fromSecretariatId: secretariatId },
+                { toSecretariatId: secretariatId },
+              ],
+            },
+          },
+        },
+      ],
+    }
+
+    const [
+      totalProtocols,
+      byStatus,
+      overdueProtocols,
+      recentProtocols,
+      inQueueCount,
+      staffCount,
+      topFlowsRaw,
+      recentAuditLogs,
+    ] = await Promise.all([
+      prisma.protocol.count({ where: involvementFilter }),
+
+      prisma.protocol.groupBy({
+        by: ["status"],
+        where: involvementFilter,
+        _count: { status: true },
+      }),
+
+      prisma.protocol.count({
+        where: {
+          ...involvementFilter,
+          deadlineAt: { lt: now },
+          status: { notIn: ["CLOSED", "ARCHIVED"] },
+        },
+      }),
+
+      prisma.protocol.count({
+        where: { ...involvementFilter, createdAt: { gte: thirtyDaysAgo } },
+      }),
+
+      prisma.protocol.count({
+        where: { currentSecretariatId: secretariatId },
+      }),
+
+      prisma.user.count({
+        where: { secretariatId, active: true },
+      }),
+
+      prisma.movement.groupBy({
+        by: ["fromSecretariatId", "toSecretariatId"],
+        where: {
+          fromSecretariatId: secretariatId,
+          isInterSecretariat: true,
+          toSecretariatId: { not: null },
+        },
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+        take: 5,
+      }),
+
+      prisma.auditLog.findMany({
+        take: 15,
+        orderBy: { createdAt: "desc" },
+        where: { secretariatId },
+        select: {
+          id: true,
+          action: true,
+          entityType: true,
+          entityId: true,
+          createdAt: true,
+          user: { select: { name: true } },
+          secretariat: { select: { code: true } },
+        },
+      }),
+    ])
+
+    // Temporal data: protocols involving this secretariat per month (last 12 months)
+    const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
+    const temporalRaw = await prisma.protocol.findMany({
+      where: { ...involvementFilter, createdAt: { gte: twelveMonthsAgo } },
+      select: { createdAt: true },
+    })
+
+    const monthCounts = new Map<string, number>()
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+      monthCounts.set(key, 0)
+    }
+    for (const p of temporalRaw) {
+      const key = `${p.createdAt.getFullYear()}-${String(p.createdAt.getMonth() + 1).padStart(2, "0")}`
+      if (monthCounts.has(key)) monthCounts.set(key, (monthCounts.get(key) ?? 0) + 1)
+    }
+    const monthLabels: Record<string, string> = {
+      "01": "Jan", "02": "Fev", "03": "Mar", "04": "Abr", "05": "Mai", "06": "Jun",
+      "07": "Jul", "08": "Ago", "09": "Set", "10": "Out", "11": "Nov", "12": "Dez",
+    }
+    const temporalData = Array.from(monthCounts.entries()).map(([key, count]) => ({
+      month: monthLabels[key.split("-")[1]] ?? key,
+      count,
+    }))
+
+    // Avg tramitation for closed protocols in this secretariat
+    const closedProtocols = await prisma.protocol.findMany({
+      where: { ...involvementFilter, status: "CLOSED", closedAt: { not: null } },
+      select: { createdAt: true, closedAt: true },
+      take: 200,
+    })
+    const avgDays =
+      closedProtocols.length === 0
+        ? null
+        : closedProtocols.reduce((acc, p) => {
+            const diff = (p.closedAt!.getTime() - p.createdAt.getTime()) / 86400000
+            return acc + diff
+          }, 0) / closedProtocols.length
+
+    // Enrich topFlows with secretariat names
+    const toSecretariatIds = topFlowsRaw
+      .map((f) => f.toSecretariatId)
+      .filter((id): id is string => id !== null)
+    const toSecretariats = await prisma.secretariat.findMany({
+      where: { id: { in: toSecretariatIds } },
+      select: { id: true, name: true, code: true },
+    })
+    const toSecretariatMap = Object.fromEntries(toSecretariats.map((s) => [s.id, s]))
+
+    const statusMap = Object.fromEntries(byStatus.map((s) => [s.status, s._count.status]))
+
+    return {
+      totalProtocols,
+      openCount: statusMap.OPEN ?? 0,
+      inProgressCount: statusMap.IN_PROGRESS ?? 0,
+      pendingCount: statusMap.PENDING ?? 0,
+      closedCount: statusMap.CLOSED ?? 0,
+      archivedCount: statusMap.ARCHIVED ?? 0,
+      overdueProtocols,
+      recentProtocols,
+      inQueueCount,
+      staffCount,
+      avgTramitationDays: avgDays ? Math.round(avgDays * 10) / 10 : null,
+      temporalData,
+      recentAuditLogs,
+      topFlowsFromHere: topFlowsRaw.map((f) => ({
+        to: f.toSecretariatId ? toSecretariatMap[f.toSecretariatId] : undefined,
+        count: f._count.id,
+      })),
+    }
+  }
 }

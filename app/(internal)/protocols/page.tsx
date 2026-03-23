@@ -23,6 +23,8 @@ import {
 import { Plus, Eye, AlertTriangle } from "lucide-react"
 import { ProtocolFilters } from "@/components/protocols/ProtocolFilters"
 import { protocolFiltersValidator } from "@/validators/protocol.validator"
+import { isSecretariatScoped } from "@/lib/permissions"
+import type { UserRole } from "@prisma/client"
 
 interface SearchParams {
   search?: string
@@ -37,14 +39,18 @@ interface SearchParams {
   pageSize?: string
 }
 
-async function getProtocols(params: SearchParams) {
+async function getProtocols(
+  params: SearchParams,
+  role: UserRole,
+  userSecretariatId: string | null | undefined
+) {
   const filters = protocolFiltersValidator.parse({
     ...params,
     page: params.page ? Number(params.page) : 1,
     pageSize: params.pageSize ? Number(params.pageSize) : 20,
   })
 
-  const where: Record<string, any> = {}
+  let where: Record<string, any> = {}
 
   if (filters.search) {
     where.OR = [
@@ -70,6 +76,30 @@ async function getProtocols(params: SearchParams) {
   if (params.overdue === "true") {
     where.deadlineAt = { lt: new Date() }
     where.status = { notIn: ["CLOSED", "ARCHIVED"] }
+  }
+
+  if (isSecretariatScoped(role) && userSecretariatId) {
+    const involvement = {
+      OR: [
+        { originSecretariatId: userSecretariatId },
+        { currentSecretariatId: userSecretariatId },
+        {
+          movements: {
+            some: {
+              OR: [
+                { fromSecretariatId: userSecretariatId },
+                { toSecretariatId: userSecretariatId },
+              ],
+            },
+          },
+        },
+      ],
+    }
+    if (Object.keys(where).length > 0) {
+      where = { AND: [involvement, where] }
+    } else {
+      where = involvement
+    }
   }
 
   const [total, protocols] = await Promise.all([
@@ -116,7 +146,7 @@ export default async function ProtocolsPage({
   const session = await auth()
   const params = await searchParams
   const [{ protocols, total, page, pageSize }, secretariats] = await Promise.all([
-    getProtocols(params),
+    getProtocols(params, session!.user.role, session!.user.secretariatId),
     getSecretariats(),
   ])
 

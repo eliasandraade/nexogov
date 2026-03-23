@@ -28,9 +28,14 @@ interface UserModalProps {
     organId?: string | null
     sectorId?: string | null
   } | null
+  callerRole?: UserRole
+  callerSecretariatId?: string
 }
 
-export function UserModal({ open, onClose, user }: UserModalProps) {
+const SECRETARIAT_ASSIGNABLE_ROLES: UserRole[] = ["GESTOR", "SERVIDOR_PUBLICO", "CONSELHEIRO"]
+
+export function UserModal({ open, onClose, user, callerRole, callerSecretariatId }: UserModalProps) {
+  const isSecretarioScope = callerRole === "SECRETARIO"
   const router = useRouter()
   const isEdit = !!user
 
@@ -75,10 +80,12 @@ export function UserModal({ open, onClose, user }: UserModalProps) {
       setPassword("")
     } else {
       setName(""); setEmail(""); setPassword(""); setRole("SERVIDOR_PUBLICO")
-      setActive(true); setSecretariatId(""); setOrganId(""); setSectorId("")
+      setActive(true)
+      setSecretariatId(isSecretarioScope && callerSecretariatId ? callerSecretariatId : "")
+      setOrganId(""); setSectorId("")
     }
     setError("")
-  }, [user, open])
+  }, [user, open, isSecretarioScope, callerSecretariatId])
 
   const filteredOrgans = organs.filter((o) => !secretariatId || o.secretariatId === secretariatId)
   const filteredSectors = sectors.filter((s) => {
@@ -167,7 +174,10 @@ export function UserModal({ open, onClose, user }: UserModalProps) {
               <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(["ADMIN_SISTEMA", "DEV", "PREFEITO", "VICE_PREFEITO", "SECRETARIO", "GESTOR", "SERVIDOR_PUBLICO", "CONSELHEIRO"] as UserRole[]).map((r) => (
+                  {(isSecretarioScope
+                    ? SECRETARIAT_ASSIGNABLE_ROLES
+                    : (["ADMIN_SISTEMA", "DEV", "PREFEITO", "VICE_PREFEITO", "SECRETARIO", "GESTOR", "SERVIDOR_PUBLICO", "CONSELHEIRO"] as UserRole[])
+                  ).map((r) => (
                     <SelectItem key={r} value={r}>{USER_ROLE_LABELS[r]}</SelectItem>
                   ))}
                 </SelectContent>
@@ -184,15 +194,26 @@ export function UserModal({ open, onClose, user }: UserModalProps) {
             )}
             <div className="col-span-2 space-y-1">
               <Label>Secretaria</Label>
-              <Select value={secretariatId} onValueChange={(v) => { setSecretariatId(v === "none" ? "" : v); setOrganId(""); setSectorId("") }}>
-                <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                  {secretariats.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.code} — {s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isSecretarioScope ? (
+                <Select value={secretariatId} disabled>
+                  <SelectTrigger disabled><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                  <SelectContent>
+                    {secretariats.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.code} — {s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select value={secretariatId} onValueChange={(v) => { setSecretariatId(v === "none" ? "" : v); setOrganId(""); setSectorId("") }}>
+                  <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhuma</SelectItem>
+                    {secretariats.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.code} — {s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             {filteredOrgans.length > 0 && (
               <div className="space-y-1">

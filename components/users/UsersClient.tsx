@@ -26,7 +26,14 @@ interface User {
 
 interface Secretariat { id: string; name: string; code: string }
 
-export function UsersClient({ users, secretariats }: { users: User[]; secretariats: Secretariat[] }) {
+interface UsersClientProps {
+  users: User[]
+  secretariats: Secretariat[]
+  callerRole?: UserRole
+  callerSecretariatId?: string
+}
+
+export function UsersClient({ users, secretariats, callerRole, callerSecretariatId }: UsersClientProps) {
   const router = useRouter()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -135,6 +142,8 @@ export function UsersClient({ users, secretariats }: { users: User[]; secretaria
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         user={editingUser}
+        callerRole={callerRole}
+        callerSecretariatId={callerSecretariatId}
       />
     </>
   )
