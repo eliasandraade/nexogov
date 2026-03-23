@@ -228,6 +228,8 @@ model User {
   auditLogs           AuditLog[]
   documentAccessLogs  DocumentAccessLog[]
   notifications       Notification[]
+  comments            Comment[]
+  watches             ProtocolWatch[]
 
   @@map("users")
 }
@@ -321,6 +323,8 @@ model Protocol {
   movements          Movement[]
   documents          Document[]
   documentAccessLogs DocumentAccessLog[]
+  comments           Comment[]
+  watches            ProtocolWatch[]
 
   @@unique([year, sequence])
   @@index([status])
@@ -490,4 +494,38 @@ model Notification {
   @@index([userId, read])
   @@index([createdAt])
   @@map("notifications")
+}
+
+// ─────────────────────────────────────────────
+// COMMENTS
+// ─────────────────────────────────────────────
+
+model Comment {
+  id         String   @id @default(cuid())
+  protocolId String
+  protocol   Protocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  body       String   @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([protocolId])
+  @@map("comments")
+}
+
+// ─────────────────────────────────────────────
+// PROTOCOL WATCH
+// ─────────────────────────────────────────────
+
+model ProtocolWatch {
+  id         String   @id @default(cuid())
+  protocolId String
+  protocol   Protocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([protocolId, userId])
+  @@map("protocol_watches")
 }

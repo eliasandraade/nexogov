@@ -23,8 +23,10 @@ import { AddMovementButton } from "@/components/protocols/AddMovementButton"
 import { EditProtocolButton } from "@/components/protocols/EditProtocolButton"
 import { CloneProtocolButton } from "@/components/protocols/CloneProtocolButton"
 import { TagsEditor } from "@/components/protocols/TagsEditor"
+import { CommentsSection } from "@/components/protocols/CommentsSection"
+import { WatchButton } from "@/components/protocols/WatchButton"
 import { MetricsService } from "@/services/metrics.service"
-import { FileText, User, Calendar, MapPin, Clock, Download, Timer, Printer, MessageSquare, ShieldCheck } from "lucide-react"
+import { FileText, User, Calendar, MapPin, Clock, Download, Timer, Printer, MessageSquare, ShieldCheck, MessageCircle } from "lucide-react"
 import Link from "next/link"
 
 async function getProtocol(id: string) {
@@ -131,6 +133,7 @@ export default async function ProtocolDetailPage({
             {canForward && (
               <CloneProtocolButton protocolId={protocol.id} />
             )}
+            <WatchButton protocolId={protocol.id} />
             <Link href={`/protocols/${protocol.id}/print`} target="_blank">
               <Button variant="outline" size="sm">
                 <Printer className="h-4 w-4" />
@@ -256,6 +259,23 @@ export default async function ProtocolDetailPage({
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Internal Comments */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  Comentários Internos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CommentsSection
+                  protocolId={protocol.id}
+                  currentUserId={session!.user.id}
+                  currentUserRole={session!.user.role}
+                />
               </CardContent>
             </Card>
           </div>

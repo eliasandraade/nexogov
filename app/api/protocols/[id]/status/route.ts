@@ -78,6 +78,27 @@ export async function PATCH(
       })
     }
 
+    // Notify watchers on terminal status changes
+    if (notifTitle && existing && ["CLOSED", "REJECTED", "ARCHIVED", "DEFERRED"].includes(parsed.data.status)) {
+      const watchers = await prisma.protocolWatch.findMany({
+        where: { protocolId: id },
+        select: { userId: true },
+      })
+      if (watchers.length > 0) {
+        await prisma.notification.createMany({
+          data: watchers.map((w) => ({
+            userId: w.userId,
+            type: "PROTOCOL_STATUS_CHANGED",
+            title: `${notifTitle}: ${existing.number}`,
+            body: existing.title,
+            entityType: "Protocol",
+            entityId: id,
+          })),
+          skipDuplicates: true,
+        })
+      }
+    }
+
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error("[PATCH /api/protocols/[id]/status]", error)

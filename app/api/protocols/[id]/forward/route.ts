@@ -59,6 +59,25 @@ export async function POST(
         },
         session.user.id
       )
+
+      // Notify watchers
+      const watchers = await prisma.protocolWatch.findMany({
+        where: { protocolId: id },
+        select: { userId: true },
+      })
+      if (watchers.length > 0) {
+        await prisma.notification.createMany({
+          data: watchers.map((w) => ({
+            userId: w.userId,
+            type: "PROTOCOL_FORWARDED",
+            title: `Protocolo ${protocol.number} encaminhado`,
+            body: `"${protocol.title}" foi encaminhado.`,
+            entityType: "Protocol",
+            entityId: id,
+          })),
+          skipDuplicates: true,
+        })
+      }
     }
 
     return NextResponse.json({ ok: true })
