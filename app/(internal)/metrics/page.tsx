@@ -89,12 +89,14 @@ export default async function MetricsPage() {
                     <TableHead className="text-center w-24">Criados</TableHead>
                     <TableHead className="text-center w-28">Finalizados</TableHead>
                     <TableHead className="text-center w-32">Tempo médio</TableHead>
+                    <TableHead className="text-center w-24">Atraso</TableHead>
+                    <TableHead className="text-center w-28">Encaminhados</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {metrics.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-sm">
+                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground text-sm">
                         Nenhuma secretaria ativa com protocolos.
                       </TableCell>
                     </TableRow>
@@ -150,6 +152,16 @@ export default async function MetricsPage() {
                           ) : (
                             <span className="text-xs text-muted-foreground">—</span>
                           )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {m.sla.overdue > 0 ? (
+                            <Badge variant="destructive" className="text-xs">{m.sla.overdue}</Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center text-sm">
+                          {m.sla.forwarded > 0 ? m.sla.forwarded : <span className="text-xs text-muted-foreground">—</span>}
                         </TableCell>
                       </TableRow>
                     ))

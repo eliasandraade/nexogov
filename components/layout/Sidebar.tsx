@@ -14,6 +14,7 @@ import {
   Activity,
   UserCircle,
   Network,
+  Inbox,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils/cn"
@@ -38,6 +39,12 @@ const navItems: NavItem[] = [
     label: "Protocolos",
     href: "/protocols",
     icon: FileText,
+  },
+  {
+    label: "Minha Fila",
+    href: "/queue",
+    icon: Inbox,
+    roles: undefined,
   },
   {
     label: "Secretarias",
@@ -172,7 +179,7 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
               )}
               <Icon className="h-[15px] w-[15px] flex-shrink-0" />
               <span className="flex-1 leading-none">{item.label}</span>
-              {item.href === "/protocols" && pendingCount > 0 && !isActive && (
+              {item.href === "/queue" && pendingCount > 0 && !isActive && (
                 <span
                   className="text-[10px] font-semibold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-tight text-white"
                   style={{ backgroundColor: "var(--sidebar-active)" }}

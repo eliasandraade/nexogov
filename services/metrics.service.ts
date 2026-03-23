@@ -16,6 +16,11 @@ export interface SecretariatMetrics {
     closed: number
     avgDaysToClose: number | null
   }
+  sla: {
+    avgDaysAtSecretariat: number | null
+    overdue: number
+    forwarded: number
+  }
 }
 
 export class MetricsService {
@@ -28,7 +33,7 @@ export class MetricsService {
 
     const metrics = await Promise.all(
       secretariats.map(async (s) => {
-        const [currentByStatus, originatedTotal, closedProtocols] = await Promise.all([
+        const [currentByStatus, originatedTotal, closedProtocols, overdueCount, forwardedCount] = await Promise.all([
           // Protocols currently at this secretariat, grouped by status
           prisma.protocol.groupBy({
             by: ["status"],
@@ -47,6 +52,21 @@ export class MetricsService {
               closedAt: { not: null },
             },
             select: { createdAt: true, closedAt: true },
+          }),
+          // Protocols currently overdue at this secretariat
+          prisma.protocol.count({
+            where: {
+              currentSecretariatId: s.id,
+              deadlineAt: { lt: new Date() },
+              status: { notIn: ["CLOSED", "ARCHIVED", "REJECTED"] },
+            },
+          }),
+          // Protocols forwarded FROM this secretariat
+          prisma.movement.count({
+            where: {
+              fromSecretariatId: s.id,
+              type: "FORWARDING",
+            },
           }),
         ])
 
@@ -84,6 +104,11 @@ export class MetricsService {
             total: originatedTotal,
             closed: closedProtocols.length,
             avgDaysToClose,
+          },
+          sla: {
+            avgDaysAtSecretariat: null,
+            overdue: overdueCount,
+            forwarded: forwardedCount,
           },
         }
       })

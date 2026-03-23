@@ -1,5 +1,6 @@
 import { Breadcrumbs } from "./Breadcrumbs"
 import { NotificationBell } from "@/components/notifications/NotificationBell"
+import { GlobalSearch } from "./GlobalSearch"
 
 interface TopbarProps {
   title: string
@@ -20,6 +21,7 @@ export function Topbar({ title, subtitle }: TopbarProps) {
         )}
       </div>
       <div className="flex items-center gap-2">
+        <GlobalSearch />
         <NotificationBell />
         <div className="hidden sm:flex items-center">
           <Breadcrumbs />
