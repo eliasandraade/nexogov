@@ -26,8 +26,8 @@ import { RefreshCw, Loader2, X } from "lucide-react"
 import { PROTOCOL_STATUS_LABELS } from "@/lib/utils/labels"
 import { toast } from "sonner"
 
-const EDITABLE_STATUSES = ["OPEN", "IN_PROGRESS", "PENDING", "DEFERRED", "CLOSED", "ARCHIVED"]
-const DESTRUCTIVE_STATUSES = ["CLOSED", "ARCHIVED"]
+const EDITABLE_STATUSES = ["OPEN", "IN_PROGRESS", "PENDING", "DEFERRED", "REJECTED", "CLOSED", "ARCHIVED"]
+const DESTRUCTIVE_STATUSES = ["REJECTED", "CLOSED", "ARCHIVED"]
 
 interface ProtocolStatusButtonProps {
   protocolId: string
@@ -153,11 +153,13 @@ export function ProtocolStatusButton({ protocolId, currentStatus }: ProtocolStat
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {status === "CLOSED" ? "Encerrar protocolo?" : "Arquivar protocolo?"}
+              {status === "CLOSED" ? "Encerrar protocolo?" : status === "REJECTED" ? "Indeferir protocolo?" : "Arquivar protocolo?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {status === "CLOSED"
                 ? "Ao encerrar, o protocolo não poderá mais receber encaminhamentos. Deseja continuar?"
+                : status === "REJECTED"
+                ? "Ao indeferir, o protocolo será marcado como negado/rejeitado. Esta ação pode ser revertida. Deseja continuar?"
                 : "Ao arquivar, o protocolo será removido da tramitação ativa. Deseja continuar?"}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -167,7 +169,7 @@ export function ProtocolStatusButton({ protocolId, currentStatus }: ProtocolStat
               onClick={() => { setConfirmOpen(false); doSubmit() }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {status === "CLOSED" ? "Sim, encerrar" : "Sim, arquivar"}
+              {status === "CLOSED" ? "Sim, encerrar" : status === "REJECTED" ? "Sim, indeferir" : "Sim, arquivar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

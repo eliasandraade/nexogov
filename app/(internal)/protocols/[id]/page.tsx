@@ -13,6 +13,7 @@ import {
   PROTOCOL_PRIORITY_LABELS,
   PROTOCOL_TYPE_LABELS,
   MOVEMENT_TYPE_LABELS,
+  DOCUMENT_CATEGORY_LABELS,
 } from "@/lib/utils/labels"
 import { ProtocolTimeline } from "@/components/timeline/ProtocolTimeline"
 import { ForwardProtocolButton } from "@/components/protocols/ForwardProtocolButton"
@@ -21,7 +22,7 @@ import { ProtocolStatusButton } from "@/components/protocols/ProtocolStatusButto
 import { AddMovementButton } from "@/components/protocols/AddMovementButton"
 import { EditProtocolButton } from "@/components/protocols/EditProtocolButton"
 import { MetricsService } from "@/services/metrics.service"
-import { FileText, User, Calendar, MapPin, Clock, Download, Timer, Printer } from "lucide-react"
+import { FileText, User, Calendar, MapPin, Clock, Download, Timer, Printer, MessageSquare, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 
 async function getProtocol(id: string) {
@@ -144,6 +145,38 @@ export default async function ProtocolDetailPage({
               </CardContent>
             </Card>
 
+            {/* Despachos & Pareceres */}
+            {(() => {
+              const despachos = protocol.movements.filter(
+                (m) => m.type === "DISPATCH" || m.type === "ADMINISTRATIVE_OPINION"
+              )
+              if (despachos.length === 0) return null
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Despachos e Pareceres ({despachos.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {despachos.map((d) => (
+                      <div key={d.id} className="p-3 rounded-md border bg-muted/20 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <Badge variant="secondary" className="text-[10px]">
+                            {MOVEMENT_TYPE_LABELS[d.type]}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">{formatDate(d.createdAt, true)}</span>
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{d.description}</p>
+                        <p className="text-xs text-muted-foreground">Por {d.performedBy.name}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )
+            })()}
+
             {/* Timeline */}
             <Card>
               <CardHeader>
@@ -182,10 +215,23 @@ export default async function ProtocolDetailPage({
                           {doc.description && (
                             <p className="text-xs text-muted-foreground italic mt-0.5">{doc.description}</p>
                           )}
+                          {doc.fileHash && (
+                            <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5 flex items-center gap-1">
+                              <ShieldCheck className="h-2.5 w-2.5" />
+                              {doc.fileHash.slice(0, 16)}…
+                            </p>
+                          )}
                         </div>
-                        <Badge variant="outline" className="text-[10px] flex-shrink-0">
-                          {doc.visibility === "INTERNAL" ? "Interno" : "Restrito"}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          {doc.category && DOCUMENT_CATEGORY_LABELS[doc.category] && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              {DOCUMENT_CATEGORY_LABELS[doc.category]}
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className="text-[10px]">
+                            {doc.visibility === "INTERNAL" ? "Interno" : "Restrito"}
+                          </Badge>
+                        </div>
                         <Link href={`/api/documents/${doc.id}/download`} target="_blank">
                           <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0">
                             <Download className="h-3.5 w-3.5" />

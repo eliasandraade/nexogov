@@ -21,6 +21,7 @@ export class DocumentService {
     options: {
       description?: string
       visibility?: "INTERNAL" | "RESTRICTED_BY_PROTOCOL_PASSWORD"
+      category?: string
       uploadedById: string
     }
   ) {
@@ -52,6 +53,7 @@ export class DocumentService {
           fileHash,
           description: options.description || null,
           visibility: options.visibility ?? "RESTRICTED_BY_PROTOCOL_PASSWORD",
+          category: (options.category as any) || null,
           uploadedById: options.uploadedById,
         },
       })

@@ -1,8 +1,9 @@
 export const PROTOCOL_STATUS_LABELS: Record<string, string> = {
   OPEN: "Aberto",
-  IN_PROGRESS: "Em Tramitação",
+  IN_PROGRESS: "Em Análise",
   PENDING: "Pendente",
   DEFERRED: "Deferido",
+  REJECTED: "Indeferido",
   ARCHIVED: "Arquivado",
   CLOSED: "Encerrado",
 }
@@ -12,8 +13,22 @@ export const PROTOCOL_STATUS_VARIANTS: Record<string, "default" | "secondary" | 
   IN_PROGRESS: "warning",
   PENDING: "secondary",
   DEFERRED: "success",
+  REJECTED: "destructive",
   ARCHIVED: "outline",
   CLOSED: "secondary",
+}
+
+export const DOCUMENT_CATEGORY_LABELS: Record<string, string> = {
+  REQUERIMENTO: "Requerimento",
+  OFICIO: "Ofício",
+  LAUDO: "Laudo",
+  CERTIDAO: "Certidão",
+  CONTRATO: "Contrato",
+  ATA: "Ata",
+  DESPACHO: "Despacho",
+  RELATORIO: "Relatório",
+  DECLARACAO: "Declaração",
+  OUTRO: "Outro",
 }
 
 export const PROTOCOL_TYPE_LABELS: Record<string, string> = {

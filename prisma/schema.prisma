@@ -34,8 +34,22 @@ enum ProtocolStatus {
   IN_PROGRESS
   PENDING
   DEFERRED
+  REJECTED
   ARCHIVED
   CLOSED
+}
+
+enum DocumentCategory {
+  REQUERIMENTO
+  OFICIO
+  LAUDO
+  CERTIDAO
+  CONTRATO
+  ATA
+  DESPACHO
+  RELATORIO
+  DECLARACAO
+  OUTRO
 }
 
 enum ProtocolPriority {
@@ -368,6 +382,7 @@ model Document {
   fileHash     String?
 
   visibility  DocumentVisibility @default(RESTRICTED_BY_PROTOCOL_PASSWORD)
+  category    DocumentCategory?
   description String?
 
   uploadedById String

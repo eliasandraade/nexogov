@@ -39,7 +39,7 @@ export type CreateProtocolInput = z.infer<typeof createProtocolValidator>
 
 export const updateProtocolStatusValidator = z.object({
   protocolId: z.string().cuid(),
-  status: z.enum(["OPEN", "IN_PROGRESS", "PENDING", "DEFERRED", "ARCHIVED", "CLOSED"]),
+  status: z.enum(["OPEN", "IN_PROGRESS", "PENDING", "DEFERRED", "REJECTED", "ARCHIVED", "CLOSED"]),
   notes: z.string().max(1000).optional(),
 })
 

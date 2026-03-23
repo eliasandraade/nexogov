@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select"
 import { Paperclip, Loader2, X, Upload, Trash2 } from "lucide-react"
 import { formatFileSize } from "@/lib/utils/format"
+import { DOCUMENT_CATEGORY_LABELS } from "@/lib/utils/labels"
 import { toast } from "sonner"
 
 interface DocumentUploadFormProps {
@@ -24,6 +25,7 @@ interface FileEntry {
   file: File
   description: string
   visibility: string
+  category: string
 }
 
 const MAX_SIZE = 20 * 1024 * 1024
@@ -54,7 +56,7 @@ export function DocumentUploadForm({ protocolId }: DocumentUploadFormProps) {
         setError(`"${file.name}" excede 20 MB.`)
         continue
       }
-      newEntries.push({ file, description: "", visibility: "RESTRICTED_BY_PROTOCOL_PASSWORD" })
+      newEntries.push({ file, description: "", visibility: "RESTRICTED_BY_PROTOCOL_PASSWORD", category: "" })
     }
 
     setEntries((prev) => [...prev, ...newEntries])
@@ -88,6 +90,7 @@ export function DocumentUploadForm({ protocolId }: DocumentUploadFormProps) {
       formData.append("protocolId", protocolId)
       formData.append("description", entry.description)
       formData.append("visibility", entry.visibility)
+      if (entry.category) formData.append("category", entry.category)
 
       try {
         const res = await fetch("/api/documents", { method: "POST", body: formData })
@@ -188,22 +191,37 @@ export function DocumentUploadForm({ protocolId }: DocumentUploadFormProps) {
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      <Select
-                        value={entry.visibility}
-                        onValueChange={(v) => updateEntry(i, "visibility", v)}
-                      >
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="RESTRICTED_BY_PROTOCOL_PASSWORD">
-                            Restrito (requer senha)
-                          </SelectItem>
-                          <SelectItem value="INTERNAL">
-                            Interno (apenas usuários)
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Select
+                          value={entry.category}
+                          onValueChange={(v) => updateEntry(i, "category", v)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Classificação..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(DOCUMENT_CATEGORY_LABELS).map(([value, label]) => (
+                              <SelectItem key={value} value={value}>{label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={entry.visibility}
+                          onValueChange={(v) => updateEntry(i, "visibility", v)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="RESTRICTED_BY_PROTOCOL_PASSWORD">
+                              Restrito (requer senha)
+                            </SelectItem>
+                            <SelectItem value="INTERNAL">
+                              Interno (apenas usuários)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <Textarea
                         placeholder="Descrição (opcional)..."
                         className="min-h-[40px] text-xs"
