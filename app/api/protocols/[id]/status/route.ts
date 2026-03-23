@@ -4,6 +4,14 @@ import { updateProtocolStatusValidator } from "@/validators/protocol.validator"
 import { prisma } from "@/lib/prisma"
 import { logAudit } from "@/lib/audit/log"
 import { canForwardProtocol } from "@/lib/permissions"
+import { NotificationService } from "@/services/notification.service"
+
+const STATUS_NOTIFICATION_TITLES: Partial<Record<string, string>> = {
+  CLOSED: "Protocolo encerrado",
+  ARCHIVED: "Protocolo arquivado",
+  REJECTED: "Protocolo indeferido",
+  DEFERRED: "Protocolo deferido",
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -27,6 +35,11 @@ export async function PATCH(
   }
 
   try {
+    const existing = await prisma.protocol.findUnique({
+      where: { id },
+      select: { number: true, title: true, createdById: true },
+    })
+
     const protocol = await prisma.protocol.update({
       where: { id },
       data: {
@@ -53,6 +66,17 @@ export async function PATCH(
       entityId: id,
       metadata: { status: parsed.data.status },
     })
+
+    const notifTitle = STATUS_NOTIFICATION_TITLES[parsed.data.status]
+    if (notifTitle && existing && existing.createdById !== session.user.id) {
+      await NotificationService.createForUser(existing.createdById, {
+        type: "PROTOCOL_STATUS_CHANGED",
+        title: `${notifTitle}: ${existing.number}`,
+        body: existing.title,
+        entityType: "Protocol",
+        entityId: id,
+      })
+    }
 
     return NextResponse.json({ ok: true })
   } catch (error) {

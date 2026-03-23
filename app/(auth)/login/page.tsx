@@ -29,12 +29,12 @@ export default async function LoginPage() {
 
         {/* Logo */}
         <div className="relative z-10">
-          {/* 2048×2048 canvas — zoom in on center content */}
-          <div style={{ width: 220, height: 55, overflow: "hidden" }}>
+          {/* position:absolute is immune to layout reflow caused by client hydration */}
+          <div style={{ width: 220, height: 55, overflow: "hidden", position: "relative", flexShrink: 0 }}>
             <img
               src="/logos/logo-dark.png"
               alt="NexoGov"
-              style={{ width: 220, height: 220, display: "block", marginTop: -82 }}
+              style={{ position: "absolute", width: 220, height: 220, top: -82, left: 0 }}
             />
           </div>
         </div>
@@ -78,11 +78,11 @@ export default async function LoginPage() {
         <div className="w-full max-w-[360px] space-y-8">
           {/* Mobile logo */}
           <div className="lg:hidden">
-            <div style={{ width: 180, height: 45, overflow: "hidden" }}>
+            <div style={{ width: 180, height: 45, overflow: "hidden", position: "relative", flexShrink: 0 }}>
               <img
                 src="/logos/logo-light.png"
                 alt="NexoGov"
-                style={{ width: 180, height: 180, display: "block", marginTop: -67 }}
+                style={{ position: "absolute", width: 180, height: 180, top: -67, left: 0 }}
               />
             </div>
           </div>

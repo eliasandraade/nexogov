@@ -27,6 +27,13 @@ export class NotificationService {
     })
   }
 
+  static async createForUser(
+    userId: string,
+    input: CreateNotificationInput
+  ) {
+    await prisma.notification.create({ data: { userId, ...input } })
+  }
+
   static async getForUser(userId: string, limit = 30) {
     return prisma.notification.findMany({
       where: { userId },

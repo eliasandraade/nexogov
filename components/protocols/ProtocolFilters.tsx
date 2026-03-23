@@ -81,9 +81,10 @@ export function ProtocolFilters({ secretariats }: ProtocolFiltersProps) {
         <SelectContent>
           <SelectItem value="all">Todos os status</SelectItem>
           <SelectItem value="OPEN">Aberto</SelectItem>
-          <SelectItem value="IN_PROGRESS">Em Tramitação</SelectItem>
+          <SelectItem value="IN_PROGRESS">Em Análise</SelectItem>
           <SelectItem value="PENDING">Pendente</SelectItem>
           <SelectItem value="DEFERRED">Deferido</SelectItem>
+          <SelectItem value="REJECTED">Indeferido</SelectItem>
           <SelectItem value="CLOSED">Encerrado</SelectItem>
           <SelectItem value="ARCHIVED">Arquivado</SelectItem>
         </SelectContent>
