@@ -10,613 +10,278 @@
 
 ## Visão do Produto
 
-O NexoGov é um sistema web institucional de tramitação processual municipal, inspirado em plataformas como **eSAJ** e **PJe**, mas adaptado à realidade operacional das prefeituras brasileiras.
+O NexoGov é um sistema web institucional de tramitação processual municipal, inspirado em plataformas como **eSAJ** e **PJe**, adaptado à realidade operacional das prefeituras brasileiras.
 
-O foco do sistema é permitir a **tramitação de protocolos entre secretarias, órgãos e setores**, com rastreabilidade completa, consulta pública controlada, armazenamento seguro de documentos e geração de dados estruturados para gestão e futura pesquisa acadêmica.
+Permite a **tramitação de protocolos entre secretarias, órgãos e setores**, com rastreabilidade completa, consulta pública controlada, armazenamento seguro de documentos e geração de dados estruturados para gestão e pesquisa acadêmica.
 
-O sistema não é, neste momento, um portal aberto de protocolo pelo cidadão.  
-Ele é um **sistema interno de tramitação administrativa**, com consulta externa restrita.
+O sistema é um **sistema interno de tramitação administrativa**, com consulta externa restrita. Não é um portal aberto de protocolo pelo cidadão.
 
 ---
 
 ## Contexto Estratégico
 
-Este projeto terá uso de longo prazo:
+Uso de longo prazo planejado:
 
 - **Faculdade:** desenvolvimento e validação do sistema funcional
 - **Mestrado:** melhoria baseada em dados e análise dos fluxos administrativos
 - **Doutorado:** consolidação como base de pesquisa aplicada em gestão pública e governo digital
 
-Por isso, o sistema deve ser construído não apenas como software operacional, mas também como **base de dados confiável para pesquisa futura**.
+O sistema deve ser construído como **base de dados confiável para pesquisa futura**, além de software operacional.
 
 ---
 
-## Objetivo do Sistema
+## Stack Técnica
 
-- Centralizar protocolos administrativos
-- Padronizar a tramitação entre secretarias e setores
-- Garantir rastreabilidade institucional
-- Permitir acompanhamento semelhante a eSAJ/PJe
-- Restringir acesso integral a documentos sensíveis
-- Produzir dashboards avançados para gestão
-- Gerar base estruturada para análise de gargalos e fluxos operacionais
+| Camada | Tecnologia |
+|---|---|
+| Framework | Next.js 16 App Router |
+| Linguagem | TypeScript strict |
+| UI | Tailwind CSS v4 + shadcn/ui |
+| Backend | Next.js Route Handlers + Server Components |
+| Banco | PostgreSQL (Railway) |
+| ORM | Prisma v7 com `@prisma/adapter-pg` |
+| Auth | Auth.js v5 (next-auth beta) |
+| Validação | Zod v4 |
+| Storage | Cloudinary |
+| Deploy | Railway |
+| Charts | Recharts v3 |
+| Notificações | Sonner |
 
----
+### Detalhe crítico do Prisma
+O projeto usa **adapter-based connection** — a URL do banco **não fica no `schema.prisma`**, fica no `prisma.config.ts` via `@prisma/adapter-pg`. Nunca adicionar `datasource db { url = ... }` no schema.
 
-## Regras Fundamentais
-
-1. Cada protocolo possui um número único.
-2. Cada protocolo pode tramitar:
-   - entre secretarias
-   - entre órgãos
-   - entre setores
-   - dentro da própria secretaria
-3. Apenas usuários internos autenticados podem criar e movimentar protocolos.
-4. Usuários externos não criam protocolos.
-5. Usuários externos podem consultar movimentações pelo número do protocolo.
-6. O acesso integral aos documentos exige:
-   - número do protocolo
-   - senha específica do protocolo
-7. Quem possuir apenas o número do protocolo poderá ver:
-   - status
-   - movimentações
-   - localização atual do protocolo
-   - metadados públicos
-8. O conteúdo integral dos documentos não deve ser exibido sem autenticação específica do protocolo.
-9. Todo acesso a documento deve gerar rastreabilidade detalhada.
-10. O histórico de movimentações é imutável.
-11. Logs de auditoria são obrigatórios.
+### Detalhe crítico do Auth.js
+Auth.js v5 usa split de edge/node. O arquivo `lib/auth/auth.config.ts` contém a config base (compatível com edge), e `lib/auth/auth.ts` contém a instância completa com o adapter Prisma (apenas Node.js).
 
 ---
 
-## Escopo Inicial
+## Ambiente de Desenvolvimento
 
-Embora o sistema seja pensado para a prefeitura inteira, o início real será com **3 ou 4 secretarias principais**.
+```bash
+# Instalar dependências
+npm install
 
-O escopo inicial é **administrativo simples**, sem rigor jurídico pesado de tribunal, mas com experiência e organização inspiradas em eSAJ/PJe.
+# Rodar desenvolvimento
+npm run dev
 
----
+# Type-check
+npx tsc --noEmit
 
-## Problema que o Sistema Resolve
+# Build de produção
+npm run build
 
-Prefeituras frequentemente não sabem:
+# Aplicar schema no banco
+npx prisma db push
 
-- onde os processos estão travando
-- quanto tempo passam parados
-- quais setores demandam mais outros setores
-- quem acessou documentos
-- como melhorar sua gestão com base em dados operacionais reais
+# Seed do banco
+npx prisma db seed
+```
 
-O NexoGov existe para transformar esse cenário.
-
----
-
-## Princípios de Produto
-
-- institucional
-- auditável
-- confiável
-- claro
-- simples administrativamente
-- preparado para expansão
-- orientado a dados
-
----
-
-## Stack Obrigatória
-
-- **Frontend:** Next.js 14+ App Router
-- **Linguagem:** TypeScript strict
-- **UI:** Tailwind CSS + shadcn/ui
-- **Backend:** Next.js full stack com Server Actions e Route Handlers
-- **Banco:** PostgreSQL
-- **ORM:** Prisma
-- **Auth:** Auth.js v5
-- **Validação:** Zod
-- **Storage de arquivos:** S3 compatível ou Cloudinary
-- **Deploy:** Vercel
+### Variáveis de ambiente (`.env`)
+```
+DATABASE_URL=
+AUTH_SECRET=
+AUTH_URL=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
 
 ---
 
-## Diretrizes de Arquitetura
+## Deploy (Railway)
 
-Aplicação monolítica, organizada e robusta.
+O projeto roda no Railway com deploy automático via push no branch `main` do GitHub.
 
-Separação obrigatória:
-
-- `/app` → páginas, layouts, rotas
-- `/components` → componentes de interface
-- `/services` → regras de negócio
-- `/repositories` → acesso ao banco
-- `/lib` → auth, prisma, storage, utils, audit helpers
-- `/types` → tipagens globais
-- `/validators` → schemas Zod
-- `/hooks` → hooks de UI e client-side
-
-### Regra crítica
-Nunca colocar regra de negócio complexa diretamente em componentes visuais.
+- **App:** Next.js em container Railway
+- **Banco:** PostgreSQL gerenciado pelo Railway (mesmo projeto)
+- **Storage:** Cloudinary (externo)
+- Para aplicar mudanças de schema em produção: `npx prisma db push` com a `DATABASE_URL` do Railway
 
 ---
 
-## Estrutura de Pastas Recomendada
+## Arquitetura
 
-/app
-  /(auth)
-    /login
-  /(internal)
-    /dashboard
-    /protocolos
-    /protocolos/novo
-    /protocolos/[id]
-    /secretarias
-    /orgaos
-    /setores
-    /auditoria
-  /(public)
-    /consulta
-    /consulta/documentos
+Aplicação monolítica Next.js full-stack. Separação obrigatória:
 
-/components
-  /layout
-  /dashboard
-  /protocolos
-  /timeline
-  /documentos
-  /auditoria
-  /forms
-  /ui
+```
+/app              → páginas, layouts, rotas (App Router)
+/components       → componentes de interface
+/services         → regras de negócio
+/repositories     → acesso ao banco (Prisma)
+/lib              → auth, prisma, storage, utils, audit, rate-limit
+/types            → tipagens globais
+/validators       → schemas Zod
+/hooks            → hooks client-side
+/prisma           → schema e seed
+```
 
-/lib
-  /auth
-  /prisma
-  /storage
-  /audit
-  /utils
-  /permissions
-
-/services
-  protocolo.service.ts
-  movimentacao.service.ts
-  documento.service.ts
-  auditoria.service.ts
-  organizacao.service.ts
-  dashboard.service.ts
-
-/repositories
-  protocolo.repository.ts
-  movimentacao.repository.ts
-  documento.repository.ts
-  auditoria.repository.ts
-  organizacao.repository.ts
-  dashboard.repository.ts
-
-/validators
-  protocolo.validator.ts
-  movimentacao.validator.ts
-  login.validator.ts
-  consulta.validator.ts
-  documento.validator.ts
-
-/types
-
-/prisma
+**Regra crítica:** nunca colocar regra de negócio complexa diretamente em componentes ou route handlers. Regras vão em `/services`, acesso ao banco em `/repositories`.
 
 ---
 
 ## Domínio de Negócio
 
 ### Estrutura organizacional
-O sistema deve representar:
+- **Secretaria** → unidade principal
+- **Órgão** → subdivisão da secretaria
+- **Setor** → subdivisão do órgão ou da secretaria
 
-- Secretaria
-- Órgão
-- Setor
+### Perfis de usuário (UserRole)
+```
+ADMIN_SISTEMA    → acesso total ao sistema
+DEV              → acesso total + ferramentas de debug
+PREFEITO         → acesso gerencial amplo
+VICE_PREFEITO    → acesso gerencial amplo
+SECRETARIO       → acesso gerencial da secretaria
+GESTOR           → acesso operacional gerencial
+SERVIDOR_PUBLICO → criação e tramitação de protocolos
+CONSELHEIRO      → acesso de leitura
+```
+Perfis legados (manter compatibilidade): `ADMIN`, `PROTOCOLO`, `OPERADOR_SETOR`
 
-Um protocolo pode ser encaminhado entre quaisquer dessas estruturas, conforme a modelagem institucional escolhida.
-
-### Usuários
-Usuários internos pertencem a uma estrutura organizacional e possuem perfil de acesso.
-
-Perfis mínimos:
-
-- `ADMIN`
-- `GESTOR`
-- `PROTOCOLO`
-- `OPERADOR_SETOR`
+### Hierarquia de permissões (`lib/permissions/index.ts`)
+```ts
+ADMIN_ROLES   = { ADMIN_SISTEMA, DEV, ADMIN }
+MANAGER_ROLES = ADMIN_ROLES + { GESTOR, PREFEITO, VICE_PREFEITO, SECRETARIO }
+CREATOR_ROLES = MANAGER_ROLES + { SERVIDOR_PUBLICO, PROTOCOLO }
+```
 
 ---
 
 ## Entidades Principais
 
-### 1. Protocolo
+### Protocol
+- `number` → gerado automaticamente no formato `ANO.SEQUENCIAL` (ex: `2026.000001`)
+- `passwordHash` → bcrypt da senha do protocolo (necessária para acesso a documentos)
+- `requesters` → campo `Json` para múltiplos interessados `[{name, document, company}]`
+- `deadlineAt` → prazo; vencidos ficam destacados em vermelho na listagem
+- `status` → OPEN | IN_PROGRESS | PENDING | DEFERRED | CLOSED | ARCHIVED
 
-Campos mínimos esperados:
+### Movement (Movimentação)
+- Imutável após criação
+- `isInterSecretariat` → flag para fluxos entre secretarias (usado nos dashboards)
+- CC (cópia): movimentações com prefixo `[CÓPIA]` não alteram localização atual do protocolo
 
-- id
-- numero
-- senhaHash
-- titulo
-- descricao
-- tipo
-- status
-- prioridade opcional
-- secretariaOrigemId
-- orgaoOrigemId opcional
-- setorOrigemId opcional
-- secretariaAtualId
-- orgaoAtualId opcional
-- setorAtualId opcional
-- interessadoNome opcional
-- interessadoDocumento opcional
-- observacoesInternas opcional
-- createdById
-- createdAt
-- updatedAt
-
-### 2. Movimentacao
-
-Campos mínimos:
-
-- id
-- protocoloId
-- tipo
-- descricao
-- secretariaOrigemId opcional
-- orgaoOrigemId opcional
-- setorOrigemId opcional
-- secretariaDestinoId opcional
-- orgaoDestinoId opcional
-- setorDestinoId opcional
-- realizadoPorId
-- createdAt
-
-Tipos mínimos de movimentação:
-
-- `CRIACAO`
-- `ENCAMINHAMENTO`
-- `RECEBIMENTO`
-- `DESPACHO`
-- `PARECER_ADMINISTRATIVO`
-- `JUNTADA_DOCUMENTO`
-- `ATUALIZACAO_STATUS`
-- `FINALIZACAO`
-
-### 3. Documento
-
-Campos mínimos:
-
-- id
-- protocoloId
-- nomeOriginal
-- nomeArmazenado
-- storageKey
-- url
-- mimeType
-- tamanho
-- hashArquivo opcional
-- visibilidade
-- uploadedById
-- createdAt
-
-Visibilidade inicial:
-
-- `INTERNA`
-- `RESTRITA_POR_SENHA_PROTOCOLO`
-
-### 4. Log de Acesso a Documento
-
-Campos mínimos:
-
-- id
-- documentoId
-- protocoloId
-- usuarioId opcional
-- tipoAcesso
-- origemAcesso
-- canalAcesso
-- rotaReferencia
-- ip
-- userAgent
-- sucesso
-- motivoFalha opcional
-- createdAt
-
-Tipos de acesso mínimos:
-
-- `VISUALIZACAO`
-- `DOWNLOAD`
-- `PREVIEW`
-- `TENTATIVA_INVALIDA`
-
-Origens mínimas:
-
-- `INTERNO_AUTENTICADO`
-- `EXTERNO_NUMERO_SENHA`
-- `EXTERNO_TENTATIVA_INVALIDA`
-
-### 5. Log de Auditoria Geral
-
-Registrar ao menos:
-
-- login
-- logout
-- criação de protocolo
-- atualização de protocolo
-- alteração de status
-- encaminhamento
-- juntada de documento
-- visualização de documento
-- download de documento
-- erro relevante
-- tentativa negada
-
-### 6. Usuário
-
-Campos mínimos:
-
-- id
-- nome
-- email
-- senhaHash
-- perfil
-- secretariaId opcional
-- orgaoId opcional
-- setorId opcional
-- ativo
-- createdAt
-- updatedAt
-
-### 7. Secretaria
-### 8. Órgão
-### 9. Setor
-
-Essas entidades devem permitir modelar a estrutura administrativa municipal.
+### Document
+- `visibility` → INTERNAL | RESTRICTED_BY_PROTOCOL_PASSWORD
+- Acesso restrito exige número do protocolo + senha
+- Todo acesso gera `DocumentAccessLog`
 
 ---
 
-## Geração do Número de Protocolo
+## Fluxo Principal
 
-Formato recomendado:
-
-`ANO.SEQUENCIAL`
-
-Exemplo:
-`2026.000001`
-
-Regras:
-- único
-- incremental por ano
-- gerado no backend
-- não pode ser editado manualmente
+1. Usuário interno cria protocolo (com senha e documentos opcionais)
+2. Sistema gera número único `ANO.SEQUENCIAL`
+3. Protocolo entra na estrutura de origem
+4. Tramitação entre secretarias/setores via encaminhamentos
+5. Cada encaminhamento gera movimentação imutável
+6. Documentos podem ser juntados a qualquer momento (múltiplos por vez)
+7. Usuário externo consulta andamento pelo número
+8. Acesso a documentos exige número + senha do protocolo
+9. Todo acesso relevante gera log de auditoria
 
 ---
 
-## Fluxo Principal do Sistema
+## Rate Limiting
 
-1. Usuário interno cria protocolo
-2. Sistema gera número único
-3. Usuário anexa documentos se necessário
-4. Protocolo entra na estrutura inicial
-5. Protocolo é encaminhado entre setores/secretarias/órgãos
-6. Cada etapa gera movimentação imutável
-7. Documentos podem ser juntados ao protocolo
-8. Usuário externo consulta andamento pelo número
-9. Usuário externo só acessa documentos com número + senha do protocolo
-10. Todo acesso relevante gera log
+Implementado em `lib/rate-limit.ts` (in-memory). Em produção com múltiplas instâncias, substituir por Redis.
 
----
-
-## Consulta Pública
-
-### Consulta por número
-A página pública deve permitir informar o número do protocolo e exibir:
-
-- número do protocolo
-- título
-- status
-- data de criação
-- localização atual
-- timeline de movimentações
-- metadados públicos
-
-### Consulta de documentos
-Para liberar documentos, o sistema deve exigir:
-
-- número do protocolo
-- senha do protocolo
-
-Somente após essa validação devem ser exibidos os documentos autorizados.
-
-Toda tentativa e todo acesso devem ser registrados.
-
----
-
-## Dashboard Avançado
-
-O sistema deve ter painel gerencial com, no mínimo:
-
-- total de protocolos
-- protocolos por status
-- protocolos por secretaria
-- protocolos por setor
-- protocolos por período
-- protocolos finalizados por período
-- tempo médio de tramitação
-- tempo médio por secretaria
-- tempo médio por setor
-- setores com mais pendências
-- maiores fluxos entre secretarias e órgãos
-- protocolos atrasados
-- usuários mais ativos
-- eventos recentes de auditoria
-
----
-
-## Dados para Pesquisa
-
-O sistema deve ser modelado para futura análise acadêmica.
-
-A estrutura de dados deve permitir estudar:
-
-- gargalos operacionais
-- trajetórias mais frequentes de protocolos
-- padrões de encaminhamento
-- tempos médios por órgão e setor
-- redes de interação entre secretarias
-- concentração de carga operacional
-- padrões de atraso
-- reencaminhamentos recorrentes
-
-Toda decisão de modelagem deve considerar que o sistema servirá no futuro para:
-- produção de artigos
-- dissertação
-- tese
-- proposição de modelo de gestão pública baseada em dados
+- Consulta pública de protocolo: **30 req/min por IP**
+- Acesso a documentos (senha): **10 req/min por IP**
 
 ---
 
 ## Segurança
 
-Obrigatório:
-
-- autenticação robusta
-- autorização por perfil
-- validação com Zod
-- hash seguro de senhas
-- hash seguro da senha do protocolo
-- proteção de rotas internas
-- logs de acesso
-- sanitização de inputs
-- política clara de acesso a documentos
+- Senhas de usuário: mínimo 8 caracteres, maiúscula, número e caractere especial
+- Senha do protocolo: mínimo 4 caracteres (gerador de 256 bits disponível no formulário)
+- Rotas internas protegidas por Auth.js middleware
+- Logs de auditoria obrigatórios em toda ação relevante
+- Documentos nunca expostos sem autenticação específica do protocolo
 
 ---
 
-## UX/UI
+## Páginas e Rotas Principais
 
-A interface deve ser inspirada em sistemas como eSAJ e PJe, mas com melhor clareza visual.
+### Internas (`/(internal)`)
+| Rota | Descrição |
+|---|---|
+| `/dashboard` | KPIs, gráficos, fluxos, atividade recente |
+| `/protocols` | Listagem com filtros, busca, paginação |
+| `/protocols/novo` | Criação de protocolo |
+| `/protocols/[id]` | Detalhe, timeline, documentos, ações |
+| `/protocols/[id]/print` | Página de impressão |
+| `/secretariats` | Gestão de secretarias |
+| `/organs` | Gestão de órgãos |
+| `/sectors` | Gestão de setores |
+| `/users` | Gestão de usuários |
+| `/audit` | Logs de auditoria paginados |
+| `/metrics` | Métricas avançadas |
+| `/reports` | Relatórios |
+| `/profile` | Perfil do usuário |
 
-Características desejadas:
+### Públicas (`/(public)`)
+| Rota | Descrição |
+|---|---|
+| `/consulta` | Consulta por número de protocolo |
+| `/consulta/documentos` | Acesso a documentos com número + senha |
 
-- institucional
-- sóbria
-- limpa
-- forte uso de tabelas
-- timeline processual bem destacada
-- filtros robustos
-- consulta pública clara
-- área de documentos bem delimitada
-- área de auditoria legível
-
-Evitar:
-- visual excessivamente moderno sem contexto institucional
-- excesso de cor
-- animações desnecessárias
-
----
-
-## Funcionalidades Obrigatórias no MVP
-
-### Internas
-- login
-- cadastro organizacional básico
-- criação de protocolo
-- geração automática de número
-- tramitação entre estruturas
-- timeline de movimentações
-- anexação de documentos
-- listagem com filtros
-- detalhe do protocolo
-- dashboard inicial
-- logs de auditoria
-
-### Externas
-- consulta pública por número
-- validação por número + senha para documentos
-- logs de acesso a documentos
+### API relevante
+| Endpoint | Descrição |
+|---|---|
+| `GET /api/export?entity=...` | Export CSV para análise acadêmica (admin) |
+| `POST /api/protocols/[id]/forward` | Encaminhar protocolo (com CC) |
+| `PATCH /api/protocols/[id]/status` | Alterar status |
+| `POST /api/documents` | Upload de documento |
+| `GET /api/public/protocols/[number]` | Consulta pública |
+| `POST /api/public/documents` | Acesso a documentos com senha |
 
 ---
 
-## Fases de Implementação
+## Dashboard
 
-### Fase 1
-- setup do projeto
-- autenticação
-- schema Prisma
-- entidades organizacionais
-- CRUD de protocolo
-- geração de número único
-- timeline de movimentações
-- consulta pública por número
-
-### Fase 2
-- upload em nuvem
-- senha do protocolo
-- restrição de documentos
-- logs de acesso a documentos
-- dashboard avançado
-
-### Fase 3
-- filtros avançados
-- relatórios
-- melhorias de auditoria
-- refinamento visual estilo eSAJ/PJe
+- KPIs: total, em tramitação, pendentes, encerrados, atrasados
+- Gráfico de status (BarChart)
+- Distribuição por secretaria
+- Fluxos inter-secretaria mais frequentes
+- Evolução temporal mensal (LineChart — 12 meses)
+- Matriz de fluxos entre secretarias (heatmap)
+- Métricas de segurança (tentativas inválidas, atrasados)
+- Atividade recente de auditoria
 
 ---
 
-## O que Não Fazer Agora
+## Export para Pesquisa Acadêmica
 
-- não usar microserviços
-- não adicionar IA neste momento
-- não transformar em sistema judicial complexo
-- não abrir protocolo diretamente pelo cidadão
-- não complicar a arquitetura sem necessidade
+`GET /api/export?entity=protocols|movements|flows|secretariats` (restrito a admins)
 
----
+Exporta CSV com BOM (compatível com Excel) de:
+- `protocols` → todos os protocolos com metadados
+- `movements` → todas as movimentações
+- `flows` → agregação de fluxos entre secretarias
+- `secretariats` → secretarias com contagens
 
-## Mentalidade de Construção
-
-Este sistema deve ser pensado como:
-
-- produto institucional real
-- govtech escalável
-- base de pesquisa aplicada
-- ativo central de longo prazo
-
-Prioridades permanentes:
-
-1. confiabilidade
-2. auditabilidade
-3. clareza
-4. segurança
-5. qualidade dos dados
-6. manutenção fácil
-7. evolução futura
+Aceita parâmetros `from` e `to` (ISO date) para `protocols` e `movements`.
 
 ---
 
-## Ordem Recomendada de Trabalho
+## Convenções de Código
 
-1. modelar domínio e schema Prisma
-2. configurar auth e permissões
-3. implementar estrutura organizacional
-4. implementar criação e tramitação de protocolos
-5. implementar timeline
-6. implementar consulta pública
-7. implementar storage e documentos
-8. implementar rastreabilidade de acesso
-9. implementar dashboard e auditoria
-10. refinar UX institucional
+- Todos os identificadores em **inglês** (variáveis, funções, tipos, rotas de API, campos do banco)
+- Textos da interface em **português brasileiro**
+- Sem comentários desnecessários — código deve ser autoexplicativo
+- Sem over-engineering: construir apenas o necessário para o estágio atual
+- Sem feature flags, backwards-compat shims ou mocks em testes
 
 ---
 
-## Instrução Final ao Claude
+## Instrução Final
 
 Ao trabalhar neste projeto:
-
-- preserve consistência entre domínio, banco e interface
-- explique decisões estruturais importantes
-- escreva código limpo e pronto para evolução
-- trate o NexoGov como um sistema crítico e institucional
-- pense sempre também no valor futuro dos dados para pesquisa acadêmica
-
-Comece sempre pela solução mais sólida e clara que seja viável para um MVP real.
+- Preservar consistência entre schema Prisma, services e interface
+- Nunca colocar regra de negócio em componentes ou route handlers diretamente
+- Tratar o NexoGov como sistema crítico e institucional
+- Considerar sempre o valor futuro dos dados para pesquisa acadêmica
+- Começar pela solução mais sólida e direta viável para o estágio atual

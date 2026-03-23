@@ -1,36 +1,163 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NexoGov
 
-## Getting Started
+**Conectando processos. Transformando gestão.**
 
-First, run the development server:
+Sistema web institucional de tramitação processual municipal. Permite o registro, encaminhamento e rastreamento de protocolos administrativos entre secretarias, órgãos e setores de uma prefeitura — com consulta pública, documentos controlados por senha e painel gerencial orientado a dados.
+
+---
+
+## Funcionalidades
+
+- Criação e tramitação de protocolos entre secretarias e setores
+- Geração automática de número único (`ANO.SEQUENCIAL`)
+- Timeline imutável de movimentações
+- Encaminhamento com cópia (CC) para múltiplas secretarias
+- Upload de múltiplos documentos com controle de visibilidade
+- Consulta pública por número de protocolo
+- Acesso a documentos protegido por senha do protocolo
+- Dashboard gerencial com gráficos e matriz de fluxos
+- Logs de auditoria completos
+- Exportação de dados em CSV para análise acadêmica
+- Interface responsiva (desktop e mobile)
+
+---
+
+## Stack
+
+- **Next.js 16** App Router · TypeScript strict
+- **Prisma 7** com `@prisma/adapter-pg` (adapter-based, sem URL no schema)
+- **Auth.js v5** (next-auth beta) com split edge/node
+- **Tailwind CSS v4** + shadcn/ui
+- **Zod v4** para validação
+- **Recharts v3** para gráficos
+- **Cloudinary** para armazenamento de arquivos
+- **Railway** para hospedagem (app + PostgreSQL)
+
+---
+
+## Desenvolvimento local
+
+### Pré-requisitos
+- Node.js 20+
+- PostgreSQL local ou acesso ao banco do Railway
+
+### Instalação
+
+```bash
+git clone https://github.com/eliasandraade/nexogov.git
+cd nexogov
+npm install
+```
+
+### Variáveis de ambiente
+
+Crie um arquivo `.env` na raiz:
+
+```env
+DATABASE_URL=postgresql://user:password@host:5432/nexogov
+
+AUTH_SECRET=sua_chave_secreta_aqui
+AUTH_URL=http://localhost:3000
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+### Banco de dados
+
+```bash
+# Aplicar schema
+npx prisma db push
+
+# Popular com dados iniciais
+npx prisma db seed
+```
+
+O seed cria um admin padrão. Verifique `prisma/seed.ts` para as credenciais iniciais.
+
+### Rodar
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy
 
-## Learn More
+O projeto está hospedado no **Railway** com deploy automático a partir do branch `main`.
 
-To learn more about Next.js, take a look at the following resources:
+Para aplicar mudanças de schema em produção:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+DATABASE_URL=<url_railway> npx prisma db push
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Estrutura de pastas
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+/app
+  /(auth)         → login
+  /(internal)     → área autenticada (protocolos, dashboard, etc.)
+  /(public)       → consulta pública
+  /api            → route handlers
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+/components
+  /layout         → sidebar, topbar, breadcrumbs
+  /protocols      → listagem, filtros, botões de ação
+  /dashboard      → charts
+  /documents      → upload
+  /timeline       → histórico de movimentações
+  /forms          → formulários de criação
+  /ui             → componentes base (shadcn)
+
+/services         → regras de negócio
+/repositories     → acesso ao banco
+/validators       → schemas Zod
+/lib              → auth, prisma, storage, audit, rate-limit, utils
+/prisma           → schema.prisma e seed.ts
+```
+
+---
+
+## Perfis de acesso
+
+| Perfil | Descrição |
+|---|---|
+| `ADMIN_SISTEMA` | Acesso total |
+| `DEV` | Acesso total |
+| `PREFEITO` / `VICE_PREFEITO` | Acesso gerencial amplo |
+| `SECRETARIO` | Acesso gerencial da secretaria |
+| `GESTOR` | Operacional gerencial |
+| `SERVIDOR_PUBLICO` | Criação e tramitação |
+| `CONSELHEIRO` | Somente leitura |
+
+---
+
+## Consulta pública
+
+Qualquer pessoa pode consultar o andamento de um protocolo em `/consulta` informando o número. Para acessar documentos, é necessário também a senha do protocolo.
+
+---
+
+## Exportação de dados
+
+O endpoint `GET /api/export` (restrito a admins) exporta CSV para análise acadêmica:
+
+```
+/api/export?entity=protocols
+/api/export?entity=movements&from=2026-01-01&to=2026-12-31
+/api/export?entity=flows
+/api/export?entity=secretariats
+```
+
+---
+
+## Licença
+
+Uso interno. Desenvolvido para gestão administrativa municipal.
