@@ -16,10 +16,19 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-xs text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-      title={isDark ? "Modo claro" : "Modo escuro"}
+      className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-xs transition-colors"
+      style={{ color: "var(--sidebar-muted)" }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.backgroundColor = "var(--sidebar-accent)"
+        ;(e.currentTarget as HTMLElement).style.color = "white"
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.backgroundColor = ""
+        ;(e.currentTarget as HTMLElement).style.color = "var(--sidebar-muted)"
+      }}
+      title={isDark ? "Mudar para modo claro" : "Mudar para modo escuro"}
     >
-      {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+      {isDark ? <Sun className="h-3.5 w-3.5 flex-shrink-0" /> : <Moon className="h-3.5 w-3.5 flex-shrink-0" />}
       {isDark ? "Modo claro" : "Modo escuro"}
     </button>
   )

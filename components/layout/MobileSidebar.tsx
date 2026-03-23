@@ -19,26 +19,28 @@ export function MobileSidebar({ userRole, userName, secretariatName, pendingCoun
     <>
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden fixed top-3 left-3 z-50 h-8 w-8 rounded-md flex items-center justify-center bg-[#1e3a5f] text-white shadow-md"
+        className="lg:hidden fixed top-3 left-3 z-50 h-8 w-8 rounded-md flex items-center justify-center text-white shadow-md transition-opacity hover:opacity-90"
+        style={{ backgroundColor: "var(--sidebar)" }}
         aria-label="Abrir menu"
       >
-        <Menu className="h-4 w-4" />
+        <Menu className="h-[15px] w-[15px]" />
       </button>
 
       {open && (
         <>
           {/* Backdrop */}
           <div
-            className="lg:hidden fixed inset-0 z-40 bg-black/50"
+            className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
             onClick={() => setOpen(false)}
           />
           {/* Sidebar container */}
           <div className="lg:hidden fixed inset-y-0 left-0 z-50 w-64">
             <button
               onClick={() => setOpen(false)}
-              className="absolute top-3 right-3 z-10 h-6 w-6 rounded flex items-center justify-center text-white/60 hover:text-white"
+              className="absolute top-3.5 right-3 z-10 h-6 w-6 rounded-md flex items-center justify-center text-white/50 hover:text-white transition-colors"
+              aria-label="Fechar menu"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
             <div onClick={() => setOpen(false)}>
               <Sidebar
