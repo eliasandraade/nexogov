@@ -1,0 +1,22 @@
+name: Alerta de Prazo Diário
+
+on:
+  schedule:
+    # Roda todo dia às 11:00 UTC = 08:00 Brasília
+    - cron: "0 11 * * *"
+  workflow_dispatch: # permite rodar manualmente pelo GitHub
+
+jobs:
+  deadline-alerts:
+    name: Verificar prazos vencendo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chamar endpoint de alertas
+        run: |
+          RESPONSE=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            "https://nexogov-git-production.up.railway.app/api/cron/deadline-alerts?token=${{ secrets.CRON_SECRET }}")
+          cat /tmp/response.json
+          if [ "$RESPONSE" != "200" ]; then
+            echo "Erro: HTTP $RESPONSE"
+            exit 1
+          fi
