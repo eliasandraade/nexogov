@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://nexogov-git-production.up.railway.app"),
   title: {
     default: "NexoGov",
     template: "%s — NexoGov",
