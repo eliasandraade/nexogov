@@ -205,7 +205,8 @@ model User {
   email        String   @unique
   passwordHash String
   role         UserRole @default(SERVIDOR_PUBLICO)
-  active       Boolean  @default(true)
+  active                 Boolean  @default(true)
+  hasCompletedOnboarding Boolean  @default(false)
 
   secretariatId String?
   secretariat   Secretariat? @relation(fields: [secretariatId], references: [id])

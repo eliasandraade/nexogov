@@ -148,6 +148,7 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
             <Link
               key={item.href}
               href={item.href}
+              data-tour={`nav-${item.href.replace("/", "")}`}
               className={cn(
                 "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all relative group",
                 isActive ? "text-white font-medium" : ""
@@ -193,7 +194,7 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
       </nav>
 
       {/* User + footer */}
-      <div className="px-3 pb-3 pt-2 space-y-1" style={{ borderTop: "1px solid var(--sidebar-border)" }}>
+      <div className="px-3 pb-3 pt-2 space-y-1" data-tour="sidebar-footer" style={{ borderTop: "1px solid var(--sidebar-border)" }}>
         {/* User info */}
         <div
           className="flex items-center gap-2.5 px-3 py-2 rounded-md"

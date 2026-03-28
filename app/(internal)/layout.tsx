@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
+import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider"
 import { prisma } from "@/lib/prisma"
 
 export default async function InternalLayout({
@@ -11,6 +12,11 @@ export default async function InternalLayout({
 }) {
   const session = await auth()
   if (!session) redirect("/login")
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { hasCompletedOnboarding: true },
+  })
 
   // Pending protocols count for the user's secretariat (for sidebar badge)
   const pendingCount = session.user.secretariat?.id
@@ -45,6 +51,11 @@ export default async function InternalLayout({
       <main className="flex-1 lg:ml-64 min-h-screen bg-background">
         {children}
       </main>
+
+      <OnboardingProvider
+        role={session.user.role}
+        hasCompleted={currentUser?.hasCompletedOnboarding ?? true}
+      />
     </div>
   )
 }

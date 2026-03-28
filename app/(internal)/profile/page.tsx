@@ -8,7 +8,8 @@ import { Separator } from "@/components/ui/separator"
 import { USER_ROLE_LABELS } from "@/lib/utils/labels"
 import { formatDate } from "@/lib/utils/format"
 import { ProfileForm } from "@/components/profile/ProfileForm"
-import { User, Building2, Calendar } from "lucide-react"
+import { RestartOnboardingButton } from "@/components/profile/RestartOnboardingButton"
+import { User, Building2, Calendar, BookOpen } from "lucide-react"
 
 export default async function ProfilePage() {
   const session = await auth()
@@ -103,6 +104,21 @@ export default async function ProfilePage() {
         </Card>
 
         <ProfileForm />
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Tutorial do Sistema
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Reveja o tutorial de introdução ao NexoGov a qualquer momento.
+            </p>
+            <RestartOnboardingButton />
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
