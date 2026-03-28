@@ -53,7 +53,7 @@ function ScopedDashboard({
     <div className="p-6 space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
+        <Card data-tour="dash-kpi-total">
           <CardContent className="pt-5">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Envolvidos</span>
@@ -66,7 +66,7 @@ function ScopedDashboard({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="dash-kpi-queue">
           <CardContent className="pt-5">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Na Fila</span>
@@ -79,7 +79,7 @@ function ScopedDashboard({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="dash-kpi-overdue">
           <CardContent className="pt-5">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Atrasados</span>
@@ -94,7 +94,7 @@ function ScopedDashboard({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="dash-kpi-closed">
           <CardContent className="pt-5">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Encerrados</span>
@@ -109,7 +109,7 @@ function ScopedDashboard({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="dash-kpi-staff">
           <CardContent className="pt-5">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Servidores</span>
@@ -123,7 +123,7 @@ function ScopedDashboard({
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card data-tour="dash-status-chart">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Protocolos por Status</CardTitle>
           </CardHeader>
@@ -132,7 +132,7 @@ function ScopedDashboard({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="dash-flows">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Fluxos Saindo desta Secretaria</CardTitle>
           </CardHeader>
@@ -154,7 +154,7 @@ function ScopedDashboard({
       </div>
 
       {/* Temporal evolution */}
-      <Card>
+      <Card data-tour="dash-temporal">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Evolução Mensal (12 meses)</CardTitle>
         </CardHeader>
@@ -164,7 +164,7 @@ function ScopedDashboard({
       </Card>
 
       {/* Recent audit log */}
-      <Card>
+      <Card data-tour="dash-activity">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -326,7 +326,7 @@ export default async function DashboardPage({
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
+          <Card data-tour="dash-kpi-total">
             <CardContent className="pt-5">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total</span>
@@ -339,7 +339,7 @@ export default async function DashboardPage({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-tour="dash-kpi-queue">
             <CardContent className="pt-5">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Em Tramitação</span>
@@ -354,7 +354,7 @@ export default async function DashboardPage({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-tour="dash-kpi-overdue">
             <CardContent className="pt-5">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pendentes</span>
@@ -370,7 +370,7 @@ export default async function DashboardPage({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-tour="dash-kpi-closed">
             <CardContent className="pt-5">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Encerrados</span>
@@ -389,7 +389,7 @@ export default async function DashboardPage({
         {/* Charts row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Status chart */}
-          <Card className="lg:col-span-1">
+          <Card className="lg:col-span-1" data-tour="dash-status-chart">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Protocolos por Status</CardTitle>
             </CardHeader>
@@ -399,7 +399,7 @@ export default async function DashboardPage({
           </Card>
 
           {/* By secretariat */}
-          <Card>
+          <Card data-tour="dash-by-secretariat">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Por Secretaria</CardTitle>
             </CardHeader>
@@ -431,7 +431,7 @@ export default async function DashboardPage({
           </Card>
 
           {/* Top flows */}
-          <Card>
+          <Card data-tour="dash-flows">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Fluxos Inter-Secretaria</CardTitle>
             </CardHeader>
@@ -454,7 +454,7 @@ export default async function DashboardPage({
 
         {/* Temporal evolution + Flow matrix */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
+          <Card data-tour="dash-temporal">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Evolução Mensal (12 meses)</CardTitle>
             </CardHeader>
@@ -463,7 +463,7 @@ export default async function DashboardPage({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-tour="dash-flow-matrix">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Matriz de Fluxos Inter-Secretaria</CardTitle>
             </CardHeader>
@@ -478,7 +478,7 @@ export default async function DashboardPage({
 
         {/* Security + recent activity */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card>
+          <Card data-tour="dash-security">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Shield className="h-4 w-4" />
@@ -506,7 +506,7 @@ export default async function DashboardPage({
           </Card>
 
           {/* Recent audit log */}
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2" data-tour="dash-activity">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">

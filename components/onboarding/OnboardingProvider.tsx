@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { usePathname } from "next/navigation"
 import type { UserRole } from "@prisma/client"
 import { getTourSteps } from "./tours"
 
@@ -10,13 +11,14 @@ interface Props {
 }
 
 export function OnboardingProvider({ role, hasCompleted }: Props) {
+  const pathname = usePathname()
+
   useEffect(() => {
     if (hasCompleted) return
 
     let cancelled = false
 
     async function startTour() {
-      // Inject driver.js CSS from public
       const existingLink = document.getElementById("driver-css")
       if (!existingLink) {
         const link = document.createElement("link")
@@ -26,11 +28,10 @@ export function OnboardingProvider({ role, hasCompleted }: Props) {
         document.head.appendChild(link)
       }
 
-      // Dynamic import only runs in browser (inside useEffect)
       const { driver } = await import("driver.js")
       if (cancelled) return
 
-      const steps = getTourSteps(role)
+      const steps = getTourSteps(role, pathname)
 
       const driverObj = driver({
         showProgress: true,
@@ -58,7 +59,7 @@ export function OnboardingProvider({ role, hasCompleted }: Props) {
     return () => {
       cancelled = true
     }
-  }, [hasCompleted, role])
+  }, [hasCompleted, role, pathname])
 
   return null
 }
