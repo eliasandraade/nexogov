@@ -2,8 +2,13 @@ import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
-import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider"
+import dynamic from "next/dynamic"
 import { prisma } from "@/lib/prisma"
+
+const OnboardingProvider = dynamic(
+  () => import("@/components/onboarding/OnboardingProvider").then((m) => m.OnboardingProvider),
+  { ssr: false }
+)
 
 export default async function InternalLayout({
   children,
