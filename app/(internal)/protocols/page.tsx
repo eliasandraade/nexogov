@@ -161,9 +161,11 @@ export default async function ProtocolsPage({
       />
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between gap-4">
-          <ProtocolFilters secretariats={secretariats} />
+          <div data-tour="protocols-filters">
+            <ProtocolFilters secretariats={secretariats} />
+          </div>
           {canCreate && (
-            <Link href="/protocols/novo">
+            <Link href="/protocols/novo" data-tour="protocols-new-btn">
               <Button size="sm">
                 <Plus className="h-4 w-4" />
                 Novo Protocolo
@@ -172,7 +174,7 @@ export default async function ProtocolsPage({
           )}
         </div>
 
-        <div className="rounded-lg border bg-card overflow-hidden">
+        <div className="rounded-lg border bg-card overflow-hidden" data-tour="protocols-table">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">

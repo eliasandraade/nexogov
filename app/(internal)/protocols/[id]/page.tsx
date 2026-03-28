@@ -105,7 +105,7 @@ export default async function ProtocolDetailPage({
             <h2 className="text-xl font-semibold">{protocol.title}</h2>
           </div>
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap" data-tour="protocol-actions">
             {canForward && protocol.status !== "CLOSED" && protocol.status !== "ARCHIVED" && (
               <>
                 <EditProtocolButton
@@ -196,7 +196,7 @@ export default async function ProtocolDetailPage({
             })()}
 
             {/* Timeline */}
-            <Card>
+            <Card data-tour="protocol-timeline">
               <CardHeader>
                 <CardTitle className="text-sm">
                   Histórico de Movimentações ({protocol.movements.length})
@@ -208,7 +208,7 @@ export default async function ProtocolDetailPage({
             </Card>
 
             {/* Documents */}
-            <Card>
+            <Card data-tour="protocol-documents">
               <CardHeader>
                 <CardTitle className="text-sm">
                   Documentos Anexados ({protocol.documents.length})
@@ -283,7 +283,7 @@ export default async function ProtocolDetailPage({
           {/* Sidebar info */}
           <div className="space-y-4">
             {/* Current location */}
-            <Card>
+            <Card data-tour="protocol-location">
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
                   <MapPin className="h-4 w-4" />

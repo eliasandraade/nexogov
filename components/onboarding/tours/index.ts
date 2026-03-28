@@ -5,6 +5,8 @@ import { gestorTourSteps } from "./gestor"
 import { servidorTourSteps } from "./servidor"
 import { dashboardGestorSteps } from "./dashboard-gestor"
 import { dashboardPrefeitoSteps } from "./dashboard-prefeito"
+import { protocolsListSteps } from "./protocols-list"
+import { protocolsDetailSteps } from "./protocols-detail"
 
 const ADMIN_ROLES: UserRole[] = ["ADMIN_SISTEMA", "DEV", "ADMIN"]
 const SECRETARIAT_MANAGER_ROLES: UserRole[] = ["GESTOR", "SECRETARIO"]
@@ -15,6 +17,14 @@ export function getTourSteps(role: UserRole, pathname?: string): DriveStep[] {
   if (pathname === "/dashboard") {
     if (SECRETARIAT_MANAGER_ROLES.includes(role)) return dashboardGestorSteps
     if (EXECUTIVE_ROLES.includes(role)) return dashboardPrefeitoSteps
+  }
+
+  // Protocol list tour
+  if (pathname === "/protocols") return protocolsListSteps
+
+  // Protocol detail tour — any /protocols/[id] path except /protocols/novo
+  if (pathname?.startsWith("/protocols/") && pathname !== "/protocols/novo") {
+    return protocolsDetailSteps
   }
 
   // Default navigation tours

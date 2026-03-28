@@ -5,6 +5,19 @@ import { usePathname } from "next/navigation"
 import type { UserRole } from "@prisma/client"
 import { getTourSteps } from "./tours"
 
+const PAGE_TOUR_KEYS: Record<string, string> = {
+  "/dashboard": "onboarding:dashboard",
+  "/protocols": "onboarding:protocols",
+}
+
+function getPageTourKey(pathname: string): string | null {
+  if (PAGE_TOUR_KEYS[pathname]) return PAGE_TOUR_KEYS[pathname]
+  if (pathname.startsWith("/protocols/") && pathname !== "/protocols/novo") {
+    return "onboarding:protocol-detail"
+  }
+  return null
+}
+
 interface Props {
   role: UserRole
   hasCompleted: boolean
@@ -14,7 +27,13 @@ export function OnboardingProvider({ role, hasCompleted }: Props) {
   const pathname = usePathname()
 
   useEffect(() => {
-    if (hasCompleted) return
+    const pageTourKey = getPageTourKey(pathname)
+
+    if (pageTourKey) {
+      if (localStorage.getItem(pageTourKey)) return
+    } else {
+      if (hasCompleted) return
+    }
 
     let cancelled = false
 
@@ -43,11 +62,15 @@ export function OnboardingProvider({ role, hasCompleted }: Props) {
         steps,
         onDestroyStarted: () => {
           driverObj.destroy()
-          fetch("/api/user/onboarding", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ completed: true }),
-          })
+          if (pageTourKey) {
+            localStorage.setItem(pageTourKey, "true")
+          } else {
+            fetch("/api/user/onboarding", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ completed: true }),
+            })
+          }
         },
       })
 
