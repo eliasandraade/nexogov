@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect } from "react"
-import { driver } from "driver.js"
 import type { UserRole } from "@prisma/client"
 import { getTourSteps } from "./tours"
 
@@ -14,27 +13,51 @@ export function OnboardingProvider({ role, hasCompleted }: Props) {
   useEffect(() => {
     if (hasCompleted) return
 
-    const steps = getTourSteps(role)
+    let cancelled = false
 
-    const driverObj = driver({
-      showProgress: true,
-      progressText: "{{current}} de {{total}}",
-      nextBtnText: "Próximo",
-      prevBtnText: "Anterior",
-      doneBtnText: "Concluir",
-      allowClose: true,
-      steps,
-      onDestroyStarted: () => {
-        driverObj.destroy()
-        fetch("/api/user/onboarding", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ completed: true }),
-        })
-      },
-    })
+    async function startTour() {
+      // Inject driver.js CSS from public
+      const existingLink = document.getElementById("driver-css")
+      if (!existingLink) {
+        const link = document.createElement("link")
+        link.id = "driver-css"
+        link.rel = "stylesheet"
+        link.href = "/driver.css"
+        document.head.appendChild(link)
+      }
 
-    driverObj.drive()
+      // Dynamic import only runs in browser (inside useEffect)
+      const { driver } = await import("driver.js")
+      if (cancelled) return
+
+      const steps = getTourSteps(role)
+
+      const driverObj = driver({
+        showProgress: true,
+        progressText: "{{current}} de {{total}}",
+        nextBtnText: "Próximo",
+        prevBtnText: "Anterior",
+        doneBtnText: "Concluir",
+        allowClose: true,
+        steps,
+        onDestroyStarted: () => {
+          driverObj.destroy()
+          fetch("/api/user/onboarding", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ completed: true }),
+          })
+        },
+      })
+
+      driverObj.drive()
+    }
+
+    startTour()
+
+    return () => {
+      cancelled = true
+    }
   }, [hasCompleted, role])
 
   return null

@@ -2,13 +2,8 @@ import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
-import dynamic from "next/dynamic"
+import { OnboardingProviderLoader } from "@/components/onboarding/OnboardingProviderLoader"
 import { prisma } from "@/lib/prisma"
-
-const OnboardingProvider = dynamic(
-  () => import("@/components/onboarding/OnboardingProvider").then((m) => m.OnboardingProvider),
-  { ssr: false }
-)
 
 export default async function InternalLayout({
   children,
@@ -57,7 +52,7 @@ export default async function InternalLayout({
         {children}
       </main>
 
-      <OnboardingProvider
+      <OnboardingProviderLoader
         role={session.user.role}
         hasCompleted={currentUser?.hasCompletedOnboarding ?? true}
       />
