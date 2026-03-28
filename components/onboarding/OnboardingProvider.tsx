@@ -5,17 +5,15 @@ import { usePathname } from "next/navigation"
 import type { UserRole } from "@prisma/client"
 import { getTourSteps } from "./tours"
 
-const PAGE_TOUR_KEYS: Record<string, string> = {
-  "/dashboard": "onboarding:dashboard",
-  "/protocols": "onboarding:protocols",
-}
+const BASE_TOUR_KEY = "onboarding:navigation"
 
-function getPageTourKey(pathname: string): string | null {
-  if (PAGE_TOUR_KEYS[pathname]) return PAGE_TOUR_KEYS[pathname]
+function getTourKey(pathname: string): string {
+  if (pathname === "/dashboard") return "onboarding:dashboard"
+  if (pathname === "/protocols") return "onboarding:protocols"
   if (pathname.startsWith("/protocols/") && pathname !== "/protocols/novo") {
     return "onboarding:protocol-detail"
   }
-  return null
+  return BASE_TOUR_KEY
 }
 
 interface Props {
@@ -26,14 +24,16 @@ interface Props {
 export function OnboardingProvider({ role, hasCompleted }: Props) {
   const pathname = usePathname()
 
+  // Sync DB flag to localStorage so subsequent client navigations don't re-trigger
   useEffect(() => {
-    const pageTourKey = getPageTourKey(pathname)
-
-    if (pageTourKey) {
-      if (localStorage.getItem(pageTourKey)) return
-    } else {
-      if (hasCompleted) return
+    if (hasCompleted) {
+      localStorage.setItem(BASE_TOUR_KEY, "true")
     }
+  }, [hasCompleted])
+
+  useEffect(() => {
+    const tourKey = getTourKey(pathname)
+    if (localStorage.getItem(tourKey)) return
 
     let cancelled = false
 
@@ -62,9 +62,8 @@ export function OnboardingProvider({ role, hasCompleted }: Props) {
         steps,
         onDestroyStarted: () => {
           driverObj.destroy()
-          if (pageTourKey) {
-            localStorage.setItem(pageTourKey, "true")
-          } else {
+          localStorage.setItem(tourKey, "true")
+          if (tourKey === BASE_TOUR_KEY) {
             fetch("/api/user/onboarding", {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
@@ -82,7 +81,7 @@ export function OnboardingProvider({ role, hasCompleted }: Props) {
     return () => {
       cancelled = true
     }
-  }, [hasCompleted, role, pathname])
+  }, [role, pathname])
 
   return null
 }

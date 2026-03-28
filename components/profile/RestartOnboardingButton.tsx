@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { BookOpen } from "lucide-react"
 
-const PAGE_TOUR_KEYS = [
+const ALL_TOUR_KEYS = [
+  "onboarding:navigation",
   "onboarding:dashboard",
   "onboarding:protocols",
   "onboarding:protocol-detail",
@@ -17,7 +18,7 @@ export function RestartOnboardingButton() {
 
   async function handleRestart() {
     setLoading(true)
-    PAGE_TOUR_KEYS.forEach((key) => localStorage.removeItem(key))
+    ALL_TOUR_KEYS.forEach((key) => localStorage.removeItem(key))
     await fetch("/api/user/onboarding", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
