@@ -3,9 +3,9 @@ import type { DriveStep } from "driver.js"
 export const protocolsDetailSteps: DriveStep[] = [
   {
     popover: {
-      title: "Detalhe do Protocolo",
+      title: "📄 Ficha do Protocolo",
       description:
-        "Esta é a página central de um protocolo. Aqui você acompanha toda a vida do processo — desde a criação até o encerramento — e executa as ações necessárias. Vamos conhecer cada seção.",
+        "Esta página reúne tudo sobre um processo: dados cadastrais, histórico completo de movimentações, documentos e a localização atual. Qualquer ação sobre o protocolo parte daqui.",
       side: "over",
       align: "center",
     },
@@ -13,46 +13,53 @@ export const protocolsDetailSteps: DriveStep[] = [
   {
     element: "[data-tour='protocol-actions']",
     popover: {
-      title: "Ações do Protocolo",
+      title: "⚡ Ações Disponíveis",
       description:
-        "Botões de ação disponíveis: <strong>Editar</strong> (dados gerais), <strong>Encaminhar</strong> (tramitar para outra secretaria ou setor), <strong>Movimento</strong> (registrar despacho ou parecer), <strong>Documentos</strong> (anexar arquivos) e <strong>Status</strong> (alterar a situação do processo).",
+        "<strong>Encaminhar</strong> — tramita o protocolo para outra secretaria ou setor (a ação mais comum).<br><br>" +
+        "<strong>Movimento</strong> — registra um despacho ou parecer sem mover o protocolo de lugar.<br><br>" +
+        "<strong>Documentos</strong> — anexa arquivos ao processo.<br><br>" +
+        "<strong>Status</strong> — encerra, arquiva ou reabre o protocolo.<br><br>" +
+        "<strong>Editar</strong> — corrige título, descrição ou prazo.",
       side: "bottom",
+    },
+  },
+  {
+    popover: {
+      title: "🔄 Como Funciona a Tramitação",
+      description:
+        "Ao clicar em <strong>Encaminhar</strong>, você escolhe a secretaria e o setor de destino e registra uma observação. O protocolo passa imediatamente para a fila daquela unidade. Cada encaminhamento fica gravado para sempre no histórico — nenhum registro pode ser apagado.",
+      side: "over",
+      align: "center",
     },
   },
   {
     element: "[data-tour='protocol-timeline']",
     popover: {
-      title: "Histórico de Movimentações",
+      title: "📅 Histórico de Movimentações",
       description:
-        "Linha do tempo completa e <strong>imutável</strong> de todas as tramitações do protocolo. Cada entrada registra: quem fez, de onde veio, para onde foi e quando. É a rastreabilidade total do processo.",
+        "Linha do tempo <strong>imutável</strong> de toda a vida do protocolo. Cada entrada registra: quem fez a ação, de qual secretaria/setor, para qual destino, quando e com qual observação. É a rastreabilidade completa — fundamental para auditoria e pesquisa.",
       side: "top",
     },
   },
   {
     element: "[data-tour='protocol-documents']",
     popover: {
-      title: "Documentos Anexados",
+      title: "📎 Documentos Anexados",
       description:
-        "Lista todos os arquivos vinculados ao protocolo. Documentos podem ser <strong>Internos</strong> (visíveis apenas internamente) ou <strong>Restritos</strong> (requerem número do protocolo e senha para acesso externo). Cada arquivo tem hash de integridade registrado.",
+        "Arquivos vinculados ao processo. Cada documento tem dois níveis de visibilidade:<br><br>" +
+        "🔒 <strong>Interno</strong> — visível apenas para servidores logados.<br>" +
+        "🔑 <strong>Restrito</strong> — o cidadão pode acessar informando o número do protocolo e a senha criada na abertura do processo.<br><br>" +
+        "Todo arquivo tem um <strong>hash de integridade</strong> registrado para garantir que não foi alterado.",
       side: "top",
     },
   },
   {
     element: "[data-tour='protocol-location']",
     popover: {
-      title: "Localização Atual",
+      title: "📍 Localização Atual",
       description:
-        "Indica em qual <strong>secretaria e setor</strong> o protocolo está localizado no momento. Sempre atualizado a cada encaminhamento. Use esta informação para saber com quem falar sobre o processo.",
+        "Indica exatamente em qual <strong>secretaria e setor</strong> o protocolo se encontra neste momento. Atualizado automaticamente a cada encaminhamento. Se você precisa saber com quem falar sobre o processo, esta é a informação.",
       side: "left",
-    },
-  },
-  {
-    element: "[data-tour='nav-protocols']",
-    popover: {
-      title: "Pronto para trabalhar!",
-      description:
-        "Você já conhece o essencial do sistema de protocolos. Retorne à lista sempre que precisar localizar um processo. Tour concluído!",
-      side: "right",
     },
   },
 ]

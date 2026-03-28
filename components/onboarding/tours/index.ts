@@ -12,22 +12,35 @@ const ADMIN_ROLES: UserRole[] = ["ADMIN_SISTEMA", "DEV", "ADMIN"]
 const SECRETARIAT_MANAGER_ROLES: UserRole[] = ["GESTOR", "SECRETARIO"]
 const EXECUTIVE_ROLES: UserRole[] = ["PREFEITO", "VICE_PREFEITO"]
 
+/**
+ * Returns the localStorage key for the tour triggered by this role + pathname combination.
+ * Page-specific tours use their own key. Navigation tours (shown on any other page)
+ * always use "onboarding:navigation" so they are only shown once regardless of which
+ * non-special page triggered them.
+ */
+export function getTourKey(role: UserRole, pathname: string): string {
+  if (
+    pathname === "/dashboard" &&
+    (SECRETARIAT_MANAGER_ROLES.includes(role) || EXECUTIVE_ROLES.includes(role))
+  ) {
+    return "onboarding:dashboard"
+  }
+  if (pathname === "/protocols") return "onboarding:protocols"
+  if (pathname.startsWith("/protocols/") && pathname !== "/protocols/novo") {
+    return "onboarding:protocol-detail"
+  }
+  return "onboarding:navigation"
+}
+
 export function getTourSteps(role: UserRole, pathname?: string): DriveStep[] {
-  // Dashboard-specific tours for managers — triggered when on /dashboard
   if (pathname === "/dashboard") {
     if (SECRETARIAT_MANAGER_ROLES.includes(role)) return dashboardGestorSteps
     if (EXECUTIVE_ROLES.includes(role)) return dashboardPrefeitoSteps
   }
-
-  // Protocol list tour
   if (pathname === "/protocols") return protocolsListSteps
-
-  // Protocol detail tour — any /protocols/[id] path except /protocols/novo
   if (pathname?.startsWith("/protocols/") && pathname !== "/protocols/novo") {
     return protocolsDetailSteps
   }
-
-  // Default navigation tours
   if (ADMIN_ROLES.includes(role)) return adminTourSteps
   if ([...SECRETARIAT_MANAGER_ROLES, ...EXECUTIVE_ROLES].includes(role)) return gestorTourSteps
   return servidorTourSteps

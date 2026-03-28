@@ -3,18 +3,9 @@
 import { useEffect } from "react"
 import { usePathname } from "next/navigation"
 import type { UserRole } from "@prisma/client"
-import { getTourSteps } from "./tours"
+import { getTourSteps, getTourKey } from "./tours"
 
 const BASE_TOUR_KEY = "onboarding:navigation"
-
-function getTourKey(pathname: string): string {
-  if (pathname === "/dashboard") return "onboarding:dashboard"
-  if (pathname === "/protocols") return "onboarding:protocols"
-  if (pathname.startsWith("/protocols/") && pathname !== "/protocols/novo") {
-    return "onboarding:protocol-detail"
-  }
-  return BASE_TOUR_KEY
-}
 
 interface Props {
   role: UserRole
@@ -24,7 +15,7 @@ interface Props {
 export function OnboardingProvider({ role, hasCompleted }: Props) {
   const pathname = usePathname()
 
-  // Sync DB flag to localStorage so subsequent client navigations don't re-trigger
+  // Sync DB completion flag to localStorage so client navigation never re-triggers base tour
   useEffect(() => {
     if (hasCompleted) {
       localStorage.setItem(BASE_TOUR_KEY, "true")
@@ -32,7 +23,7 @@ export function OnboardingProvider({ role, hasCompleted }: Props) {
   }, [hasCompleted])
 
   useEffect(() => {
-    const tourKey = getTourKey(pathname)
+    const tourKey = getTourKey(role, pathname)
     if (localStorage.getItem(tourKey)) return
 
     let cancelled = false
