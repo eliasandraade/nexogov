@@ -124,7 +124,6 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
         style={{ borderBottom: "1px solid var(--sidebar-border)" }}
       >
         <Link href="/dashboard" className="flex items-center">
-          {/* 2048×2048 canvas — zoom in on center content */}
           <div style={{ width: 180, height: 36, overflow: "hidden", flexShrink: 0 }}>
             <img
               src="/logos/logo-dark.png"
@@ -150,40 +149,26 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
               href={item.href}
               data-tour={`nav-${item.href.replace("/", "")}`}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all relative group",
-                isActive ? "text-white font-medium" : ""
+                "sidebar-nav-item flex items-center gap-2.5 px-3 py-2 rounded-md text-sm relative",
+                isActive ? "sidebar-nav-active font-medium" : "font-normal"
               )}
-              style={
-                isActive
-                  ? { backgroundColor: "var(--sidebar-active)", color: "white" }
-                  : { color: "var(--sidebar-muted)" }
-              }
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = "var(--sidebar-accent)"
-                  ;(e.currentTarget as HTMLElement).style.color = "white"
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = ""
-                  ;(e.currentTarget as HTMLElement).style.color = "var(--sidebar-muted)"
-                }
-              }}
             >
               {/* Active left accent */}
               {isActive && (
                 <span
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full transition-all"
                   style={{ backgroundColor: "var(--sidebar-active-accent)" }}
                 />
               )}
               <Icon className="h-[15px] w-[15px] flex-shrink-0" />
               <span className="flex-1 leading-none">{item.label}</span>
-              {item.href === "/queue" && pendingCount > 0 && !isActive && (
+              {item.href === "/queue" && pendingCount > 0 && (
                 <span
-                  className="text-[10px] font-semibold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-tight text-white"
-                  style={{ backgroundColor: "var(--sidebar-active)" }}
+                  className={cn(
+                    "text-[10px] font-semibold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-tight text-white",
+                    !isActive && "animate-pulse-subtle"
+                  )}
+                  style={{ backgroundColor: isActive ? "var(--sidebar-active-accent)" : "var(--destructive)" }}
                 >
                   {pendingCount > 99 ? "99+" : pendingCount}
                 </span>
@@ -194,15 +179,22 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
       </nav>
 
       {/* User + footer */}
-      <div className="px-3 pb-3 pt-2 space-y-1" data-tour="sidebar-footer" style={{ borderTop: "1px solid var(--sidebar-border)" }}>
+      <div
+        className="px-3 pb-3 pt-2 space-y-1"
+        data-tour="sidebar-footer"
+        style={{ borderTop: "1px solid var(--sidebar-border)" }}
+      >
         {/* User info */}
         <div
           className="flex items-center gap-2.5 px-3 py-2 rounded-md"
           style={{ backgroundColor: "var(--sidebar-accent)" }}
         >
           <div
-            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[11px] font-bold"
-            style={{ backgroundColor: "var(--sidebar-active)" }}
+            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[11px] font-bold ring-2"
+            style={{
+              backgroundColor: "var(--sidebar-active)",
+              ringColor: "var(--sidebar-active-accent)",
+            }}
           >
             {initials}
           </div>
@@ -220,16 +212,7 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
 
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-xs transition-colors"
-          style={{ color: "var(--sidebar-muted)" }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.backgroundColor = "var(--sidebar-accent)"
-            ;(e.currentTarget as HTMLElement).style.color = "white"
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.backgroundColor = ""
-            ;(e.currentTarget as HTMLElement).style.color = "var(--sidebar-muted)"
-          }}
+          className="sidebar-sign-out flex items-center gap-2 w-full px-3 py-2 rounded-md text-xs"
         >
           <LogOut className="h-3.5 w-3.5 flex-shrink-0" />
           Sair do sistema

@@ -188,6 +188,92 @@ body {
   outline-offset: 2px;
 }
 
+/* ─── Animations ─────────────────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
+/* Utility classes */
+.animate-fade-in      { animation: fade-in     0.25s ease-out both; }
+.animate-slide-up     { animation: slide-up    0.30s ease-out both; }
+.animate-slide-right  { animation: slide-in-right 0.25s ease-out both; }
+.animate-scale-in     { animation: scale-in    0.20s ease-out both; }
+.animate-pulse-subtle { animation: pulse-subtle 2.5s ease-in-out infinite; }
+
+/* Stagger delay helpers */
+.stagger-1 { animation-delay:  50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+.stagger-8 { animation-delay: 400ms; }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    var(--secondary) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius);
+}
+
+/* ─── Sidebar nav items (CSS replaces JS event handlers) ─────────────── */
+.sidebar-nav-item {
+  color: var(--sidebar-muted);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.sidebar-nav-item:hover {
+  background-color: var(--sidebar-accent);
+  color: white;
+}
+.sidebar-nav-active {
+  background-color: var(--sidebar-active) !important;
+  color: white !important;
+}
+.sidebar-nav-active:hover {
+  background-color: var(--sidebar-active) !important;
+}
+.sidebar-sign-out {
+  color: var(--sidebar-muted);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.sidebar-sign-out:hover {
+  background-color: var(--sidebar-accent);
+  color: white;
+}
+
 /* ─── Timeline ───────────────────────────────────────────────────────── */
 .timeline-line {
   position: absolute;
@@ -196,4 +282,15 @@ body {
   bottom: 0;
   width: 2px;
   background: var(--border);
+}
+
+/* ─── Respect reduced-motion preference ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
 import { OnboardingProviderLoader } from "@/components/onboarding/OnboardingProviderLoader"
+import { PageWrapper } from "@/components/layout/PageWrapper"
 import { prisma } from "@/lib/prisma"
 
 export default async function InternalLayout({
@@ -13,20 +14,20 @@ export default async function InternalLayout({
   const session = await auth()
   if (!session) redirect("/login")
 
-  const currentUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { hasCompletedOnboarding: true },
-  })
-
-  // Pending protocols count for the user's secretariat (for sidebar badge)
-  const pendingCount = session.user.secretariat?.id
-    ? await prisma.protocol.count({
-        where: {
-          currentSecretariatId: session.user.secretariat.id,
-          status: { notIn: ["CLOSED", "ARCHIVED"] },
-        },
-      })
-    : 0
+  const [currentUser, pendingCount] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { hasCompletedOnboarding: true },
+    }),
+    session.user.secretariat?.id
+      ? prisma.protocol.count({
+          where: {
+            currentSecretariatId: session.user.secretariat.id,
+            status: { notIn: ["CLOSED", "ARCHIVED"] },
+          },
+        })
+      : Promise.resolve(0),
+  ])
 
   return (
     <div className="min-h-screen flex">
@@ -49,7 +50,9 @@ export default async function InternalLayout({
       />
 
       <main className="flex-1 lg:ml-64 min-h-screen bg-background">
-        {children}
+        <PageWrapper>
+          {children}
+        </PageWrapper>
       </main>
 
       <OnboardingProviderLoader
