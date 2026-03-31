@@ -1,4 +1,6 @@
+import { Suspense } from "react"
 import { ConsultaForm } from "@/components/forms/ConsultaForm"
+import { Loader2 } from "lucide-react"
 
 export const metadata = {
   title: "Consulta de Protocolos — NexoGov",
@@ -32,7 +34,15 @@ export default function ConsultaPage() {
           </p>
         </div>
 
-        <ConsultaForm />
+        <Suspense
+          fallback={
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          }
+        >
+          <ConsultaForm />
+        </Suspense>
       </main>
 
       <footer className="mt-auto border-t border-border py-6 text-center text-xs text-muted-foreground">

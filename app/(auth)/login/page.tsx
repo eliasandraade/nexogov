@@ -1,4 +1,5 @@
 import { LoginForm } from "@/components/forms/LoginForm"
+import { PublicConsultaInput } from "@/components/forms/PublicConsultaInput"
 import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
 
@@ -29,7 +30,6 @@ export default async function LoginPage() {
 
         {/* Logo */}
         <div className="relative z-10">
-          {/* position:absolute is immune to layout reflow caused by client hydration */}
           <div style={{ width: 220, height: 55, overflow: "hidden", position: "relative", flexShrink: 0 }}>
             <img
               src="/logos/logo-dark.png"
@@ -64,6 +64,19 @@ export default async function LoginPage() {
                 {tag}
               </span>
             ))}
+          </div>
+
+          {/* Public consultation */}
+          <div className="space-y-3 border-t border-white/10 pt-1">
+            <div>
+              <p className="text-[13px] font-medium text-white/80">
+                Consulte o andamento do seu protocolo
+              </p>
+              <p className="text-[11px] text-white/40 mt-0.5">
+                Informe o número para acompanhar as movimentações.
+              </p>
+            </div>
+            <PublicConsultaInput />
           </div>
         </div>
 

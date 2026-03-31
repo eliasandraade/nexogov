@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -41,22 +42,20 @@ interface PublicProtocol {
 }
 
 export function ConsultaForm() {
+  const searchParams = useSearchParams()
   const [number, setNumber] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [protocol, setProtocol] = useState<PublicProtocol | null>(null)
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setProtocol(null)
-
-    const cleaned = number.trim().toUpperCase()
+  async function doSearch(searchNumber: string) {
+    const cleaned = searchNumber.trim().toUpperCase()
     if (!/^\d{4}\.\d{6}$/.test(cleaned)) {
       setError("Formato inválido. Use o formato: 2026.000001")
       return
     }
-
+    setError(null)
+    setProtocol(null)
     setLoading(true)
     try {
       const res = await fetch(`/api/public/protocols/${encodeURIComponent(cleaned)}`)
@@ -75,6 +74,21 @@ export function ConsultaForm() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Auto-search when arriving from login page with ?numero= param
+  useEffect(() => {
+    const numero = searchParams.get("numero")
+    if (numero) {
+      setNumber(numero)
+      doSearch(numero)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    await doSearch(number)
   }
 
   return (
@@ -115,7 +129,7 @@ export function ConsultaForm() {
 
       {/* Result */}
       {protocol && (
-        <div className="max-w-3xl mx-auto space-y-4">
+        <div className="max-w-3xl mx-auto space-y-4 animate-slide-up">
           {/* Summary */}
           <Card>
             <CardHeader>
