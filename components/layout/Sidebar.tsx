@@ -190,11 +190,8 @@ export function Sidebar({ userRole, userName, secretariatName, pendingCount = 0 
           style={{ backgroundColor: "var(--sidebar-accent)" }}
         >
           <div
-            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[11px] font-bold ring-2"
-            style={{
-              backgroundColor: "var(--sidebar-active)",
-              ringColor: "var(--sidebar-active-accent)",
-            }}
+            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[11px] font-bold"
+            style={{ backgroundColor: "var(--sidebar-active)" }}
           >
             {initials}
           </div>
