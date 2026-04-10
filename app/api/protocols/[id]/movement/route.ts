@@ -58,11 +58,11 @@ export async function POST(
     })
 
     await logAudit({
-      action: "PROTOCOL_UPDATED",
+      action: "PROTOCOL_FORWARDED",
       userId: session.user.id,
       entityType: "Protocol",
       entityId: id,
-      metadata: { type: parsed.data.type },
+      metadata: { movementType: parsed.data.type },
     })
 
     return NextResponse.json({ ok: true })

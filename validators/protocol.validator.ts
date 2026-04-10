@@ -89,13 +89,14 @@ export type UpdateProtocolMetadataInput = z.infer<typeof updateProtocolMetadataV
 
 export const protocolFiltersValidator = z.object({
   search: z.string().optional(),
-  status: z.string().optional(),
-  type: z.string().optional(),
-  priority: z.string().optional(),
-  secretariatId: z.string().optional(),
-  sectorId: z.string().optional(),
+  status: z.enum(["OPEN", "IN_PROGRESS", "PENDING", "DEFERRED", "REJECTED", "ARCHIVED", "CLOSED"]).optional().catch(undefined),
+  type: z.enum(["ADMINISTRATIVE", "FINANCIAL", "LEGAL", "TECHNICAL", "HUMAN_RESOURCES", "SOCIAL", "ENVIRONMENTAL", "OTHER"]).optional().catch(undefined),
+  priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional().catch(undefined),
+  secretariatId: z.string().cuid().optional().catch(undefined),
+  sectorId: z.string().cuid().optional().catch(undefined),
   from: z.string().optional(),
   to: z.string().optional(),
+  overdue: z.coerce.boolean().optional().catch(undefined),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().min(5).max(100).default(20),
 })

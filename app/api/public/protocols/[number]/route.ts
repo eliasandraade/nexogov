@@ -47,7 +47,7 @@ export async function GET(
           fromSector: { select: { name: true } },
           toSecretariat: { select: { name: true, code: true } },
           toSector: { select: { name: true } },
-          performedBy: { select: { name: true } },
+          performedBy: { select: { secretariat: { select: { name: true } } } },
           createdAt: true,
         },
       },

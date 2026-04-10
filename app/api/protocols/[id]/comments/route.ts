@@ -18,6 +18,7 @@ export async function GET(
   const comments = await prisma.comment.findMany({
     where: { protocolId: id },
     orderBy: { createdAt: "asc" },
+    take: 50,
     select: {
       id: true,
       body: true,

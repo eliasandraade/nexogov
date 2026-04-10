@@ -45,11 +45,7 @@ async function getProtocols(
   role: UserRole,
   userSecretariatId: string | null | undefined
 ) {
-  const filters = protocolFiltersValidator.parse({
-    ...params,
-    page: params.page ? Number(params.page) : 1,
-    pageSize: params.pageSize ? Number(params.pageSize) : 20,
-  })
+  const filters = protocolFiltersValidator.parse(params)
 
   let where: Record<string, any> = {}
 
@@ -74,7 +70,7 @@ async function getProtocols(
     }
   }
 
-  if (params.overdue === "true") {
+  if (filters.overdue) {
     where.deadlineAt = { lt: new Date() }
     where.status = { notIn: ["CLOSED", "ARCHIVED"] }
   }

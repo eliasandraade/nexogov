@@ -36,7 +36,7 @@ interface PublicProtocol {
     fromSector: { name: string } | null
     toSecretariat: { name: string; code: string } | null
     toSector: { name: string } | null
-    performedBy: { name: string }
+    performedBy: { secretariat: { name: string } | null }
     createdAt: string
   }>
 }
@@ -219,6 +219,7 @@ export function ConsultaForm() {
                 movements={protocol.movements.map((m) => ({
                   ...m,
                   createdAt: new Date(m.createdAt),
+                  performedBy: { name: m.performedBy.secretariat?.name ?? "Servidor Público" },
                 }))}
               />
             </CardContent>
