@@ -99,21 +99,22 @@ export function ConsultaForm() {
           <form onSubmit={handleSearch} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="protocol-number">Número do Protocolo</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   id="protocol-number"
                   placeholder="Ex: 2026.000001"
                   value={number}
                   onChange={(e) => setNumber(e.target.value)}
-                  className="font-mono"
+                  className="font-mono flex-1"
                   disabled={loading}
                 />
-                <Button type="submit" disabled={loading || !number.trim()}>
+                <Button type="submit" disabled={loading || !number.trim()} className="sm:w-auto w-full">
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Search className="h-4 w-4" />
                   )}
+                  {loading ? "Consultando..." : "Consultar"}
                 </Button>
               </div>
             </div>
@@ -195,9 +196,10 @@ export function ConsultaForm() {
                   {protocol._count.documents > 0 && (
                     <a
                       href={`/consulta/documentos?numero=${encodeURIComponent(protocol.number)}`}
-                      className="text-xs text-primary underline mt-0.5 block"
+                      className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1 rounded-md transition-colors"
                     >
-                      Acessar com senha →
+                      <FileText className="h-3 w-3" />
+                      Acessar documentos
                     </a>
                   )}
                 </div>
@@ -223,16 +225,15 @@ export function ConsultaForm() {
           </Card>
 
           {protocol._count.documents > 0 && (
-            <p className="text-center text-xs text-muted-foreground">
-              Para acessar os documentos,{" "}
+            <div className="flex justify-center">
               <a
                 href={`/consulta/documentos?numero=${encodeURIComponent(protocol.number)}`}
-                className="underline text-primary"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 px-4 py-2 rounded-md transition-colors"
               >
-                clique aqui
-              </a>{" "}
-              e informe a senha do protocolo.
-            </p>
+                <FileText className="h-4 w-4" />
+                Acessar documentos com senha
+              </a>
+            </div>
           )}
         </div>
       )}

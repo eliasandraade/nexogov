@@ -67,6 +67,26 @@ export const MOVEMENT_TYPE_LABELS: Record<string, string> = {
   FINALIZATION: "Finalização",
 }
 
+export const AUDIT_ACTION_LABELS: Record<string, string> = {
+  LOGIN: "Login realizado",
+  LOGOUT: "Logout realizado",
+  PROTOCOL_CREATED: "Protocolo criado",
+  PROTOCOL_UPDATED: "Protocolo atualizado",
+  PROTOCOL_CLONED: "Protocolo clonado",
+  PROTOCOL_STATUS_CHANGED: "Status alterado",
+  PROTOCOL_FORWARDED: "Protocolo encaminhado",
+  DOCUMENT_ATTACHED: "Documento juntado",
+  DOCUMENT_VIEWED: "Documento visualizado",
+  DOCUMENT_DOWNLOADED: "Documento baixado",
+  DOCUMENT_ACCESS_DENIED: "Acesso negado a documento",
+  USER_CREATED: "Usuário criado",
+  USER_UPDATED: "Usuário atualizado",
+  SECRETARIAT_CREATED: "Secretaria criada",
+  ORGAN_CREATED: "Órgão criado",
+  SECTOR_CREATED: "Setor criado",
+  ERROR: "Erro do sistema",
+}
+
 export const USER_ROLE_LABELS: Record<string, string> = {
   ADMIN_SISTEMA: "Administrador do Sistema",
   DEV: "DEV",

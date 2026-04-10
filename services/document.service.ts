@@ -94,11 +94,11 @@ export class DocumentService {
     await prisma.document.delete({ where: { id: documentId } })
 
     await logAudit({
-      action: "DOCUMENT_ATTACHED", // reusing closest action — could add DOCUMENT_DELETED
+      action: "DOCUMENT_DELETED",
       userId,
       entityType: "Document",
       entityId: documentId,
-      metadata: { deleted: true, fileName: doc.originalName },
+      metadata: { fileName: doc.originalName },
     })
   }
 

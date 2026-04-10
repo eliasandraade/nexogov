@@ -7,7 +7,9 @@ import { formatDate, formatRelativeTime } from "@/lib/utils/format"
 import {
   PROTOCOL_STATUS_LABELS,
   PROTOCOL_STATUS_VARIANTS,
+  AUDIT_ACTION_LABELS,
 } from "@/lib/utils/labels"
+import { StatCard } from "@/components/ui/stat-card"
 import {
   FileText, Clock, CheckCircle, AlertTriangle, TrendingUp,
   ArrowRight, Shield, Activity, Users, Inbox,
@@ -53,72 +55,44 @@ function ScopedDashboard({
     <div className="p-6 space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card data-tour="dash-kpi-total">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Envolvidos</span>
-              <FileText className="h-4 w-4 text-muted-foreground/40" />
-            </div>
-            <p className="text-3xl font-bold">{data.totalProtocols}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              +{data.recentProtocols} nos últimos 30 dias
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card data-tour="dash-kpi-queue">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Na Fila</span>
-              <Inbox className="h-4 w-4 text-blue-300" />
-            </div>
-            <p className="text-3xl font-bold text-blue-600">{data.inQueueCount}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Localização atual: {secretariatCode}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card data-tour="dash-kpi-overdue">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Atrasados</span>
-              <AlertTriangle className="h-4 w-4 text-destructive/50" />
-            </div>
-            <p className={`text-3xl font-bold ${data.overdueProtocols > 0 ? "text-destructive" : "text-green-600"}`}>
-              {data.overdueProtocols}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Com prazo vencido
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card data-tour="dash-kpi-closed">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Encerrados</span>
-              <CheckCircle className="h-4 w-4 text-green-300" />
-            </div>
-            <p className="text-3xl font-bold text-green-600">{data.closedCount}</p>
-            {data.avgTramitationDays !== null && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Média: {data.avgTramitationDays} dias
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card data-tour="dash-kpi-staff">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Servidores</span>
-              <Users className="h-4 w-4 text-muted-foreground/40" />
-            </div>
-            <p className="text-3xl font-bold">{data.staffCount}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ativos na secretaria</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          data-tour="dash-kpi-total"
+          label="Total Envolvidos"
+          value={data.totalProtocols}
+          sub={`+${data.recentProtocols} nos últimos 30 dias`}
+          icon={FileText}
+        />
+        <StatCard
+          data-tour="dash-kpi-queue"
+          label="Na Fila"
+          value={data.inQueueCount}
+          sub={`Localização atual: ${secretariatCode}`}
+          icon={Inbox}
+          color="info"
+        />
+        <StatCard
+          data-tour="dash-kpi-overdue"
+          label="Atrasados"
+          value={data.overdueProtocols}
+          sub="Com prazo vencido"
+          icon={AlertTriangle}
+          color={data.overdueProtocols > 0 ? "destructive" : "success"}
+        />
+        <StatCard
+          data-tour="dash-kpi-closed"
+          label="Encerrados"
+          value={data.closedCount}
+          sub={data.avgTramitationDays !== null ? `Média: ${data.avgTramitationDays} dias` : undefined}
+          icon={CheckCircle}
+          color="success"
+        />
+        <StatCard
+          data-tour="dash-kpi-staff"
+          label="Servidores"
+          value={data.staffCount}
+          sub="Ativos na secretaria"
+          icon={Users}
+        />
       </div>
 
       {/* Charts row */}
@@ -185,7 +159,7 @@ function ScopedDashboard({
                 <div key={log.id} className="flex items-start gap-3 px-6 py-3 hover:bg-muted/30 transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium">{log.action.replace(/_/g, " ")}</span>
+                      <span className="text-xs font-medium">{AUDIT_ACTION_LABELS[log.action] ?? log.action.replace(/_/g, " ")}</span>
                       {log.entityType && (
                         <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                           {log.entityType}
@@ -326,64 +300,44 @@ export default async function DashboardPage({
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card data-tour="dash-kpi-total">
-            <CardContent className="pt-5">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total</span>
-                <FileText className="h-4 w-4 text-muted-foreground/40" />
-              </div>
-              <p className="text-3xl font-bold">{data.totalProtocols}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                +{data.recentProtocols} nos últimos 30 dias
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card data-tour="dash-kpi-queue">
-            <CardContent className="pt-5">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Em Tramitação</span>
-                <TrendingUp className="h-4 w-4 text-blue-300" />
-              </div>
-              <p className="text-3xl font-bold text-blue-600">
-                {data.openCount + data.inProgressCount}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {data.openCount} abertos · {data.inProgressCount} em andamento
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card data-tour="dash-kpi-overdue">
-            <CardContent className="pt-5">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pendentes</span>
-                <Clock className="h-4 w-4 text-yellow-300" />
-              </div>
-              <p className="text-3xl font-bold text-yellow-600">{data.pendingCount}</p>
-              {data.overdueProtocols > 0 && (
-                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+          <StatCard
+            data-tour="dash-kpi-total"
+            label="Total"
+            value={data.totalProtocols}
+            sub={`+${data.recentProtocols} nos últimos 30 dias`}
+            icon={FileText}
+          />
+          <StatCard
+            data-tour="dash-kpi-queue"
+            label="Em Tramitação"
+            value={data.openCount + data.inProgressCount}
+            sub={`${data.openCount} abertos · ${data.inProgressCount} em andamento`}
+            icon={TrendingUp}
+            color="info"
+          />
+          <StatCard
+            data-tour="dash-kpi-overdue"
+            label="Pendentes"
+            value={data.pendingCount}
+            sub={
+              data.overdueProtocols > 0 ? (
+                <span className="text-destructive flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
                   {data.overdueProtocols} com prazo vencido
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-tour="dash-kpi-closed">
-            <CardContent className="pt-5">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Encerrados</span>
-                <CheckCircle className="h-4 w-4 text-green-300" />
-              </div>
-              <p className="text-3xl font-bold text-green-600">{data.closedCount}</p>
-              {data.avgTramitationDays !== null && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Média: {data.avgTramitationDays} dias
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                </span>
+              ) : undefined
+            }
+            icon={Clock}
+            color="warning"
+          />
+          <StatCard
+            data-tour="dash-kpi-closed"
+            label="Encerrados"
+            value={data.closedCount}
+            sub={data.avgTramitationDays !== null ? `Média: ${data.avgTramitationDays} dias` : undefined}
+            icon={CheckCircle}
+            color="success"
+          />
         </div>
 
         {/* Charts row */}
@@ -527,7 +481,7 @@ export default async function DashboardPage({
                     <div key={log.id} className="flex items-start gap-3 px-6 py-3 hover:bg-muted/30 transition-colors">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium">{log.action.replace(/_/g, " ")}</span>
+                          <span className="text-xs font-medium">{AUDIT_ACTION_LABELS[log.action] ?? log.action.replace(/_/g, " ")}</span>
                           {log.entityType && (
                             <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                               {log.entityType}

@@ -86,7 +86,7 @@ const navItems: NavItem[] = [
     label: "Auditoria",
     href: "/audit",
     icon: ClipboardList,
-    roles: ["ADMIN_SISTEMA", "DEV", "ADMIN", "GESTOR", "PREFEITO", "VICE_PREFEITO"],
+    roles: ["ADMIN_SISTEMA", "DEV", "ADMIN", "GESTOR", "PREFEITO", "VICE_PREFEITO", "SECRETARIO"],
   },
   {
     label: "Meu Perfil",

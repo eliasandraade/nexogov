@@ -74,6 +74,14 @@ export async function POST(req: NextRequest) {
       organId: organId || null,
       sectorId: sectorId || null,
     },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      active: true,
+      createdAt: true,
+    },
   })
 
   await logAudit({

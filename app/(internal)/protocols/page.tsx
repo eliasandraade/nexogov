@@ -23,7 +23,8 @@ import {
 import { Plus, Eye, AlertTriangle } from "lucide-react"
 import { ProtocolFilters } from "@/components/protocols/ProtocolFilters"
 import { protocolFiltersValidator } from "@/validators/protocol.validator"
-import { isSecretariatScoped } from "@/lib/permissions"
+import { isSecretariatScoped, canCreateProtocol } from "@/lib/permissions"
+import { cn } from "@/lib/utils/cn"
 import type { UserRole } from "@prisma/client"
 
 interface SearchParams {
@@ -150,7 +151,7 @@ export default async function ProtocolsPage({
     getSecretariats(),
   ])
 
-  const canCreate = ["ADMIN_SISTEMA", "DEV", "ADMIN", "GESTOR", "PREFEITO", "VICE_PREFEITO", "SECRETARIO", "SERVIDOR_PUBLICO", "PROTOCOLO"].includes(session?.user.role ?? "")
+  const canCreate = canCreateProtocol(session!.user.role)
   const totalPages = Math.ceil(total / pageSize)
 
   return (
@@ -208,15 +209,22 @@ export default async function ProtocolsPage({
                   return (
                   <TableRow
                     key={p.id}
-                    className={
+                    className={cn(
+                      "relative cursor-pointer",
                       isOverdue
                         ? "bg-destructive/5"
                         : isNearDeadline
-                        ? "bg-yellow-50 dark:bg-yellow-950/20"
+                        ? "bg-warning-subtle/40"
                         : undefined
-                    }
+                    )}
                   >
                     <TableCell>
+                      {/* Stretched link covers entire row */}
+                      <Link
+                        href={`/protocols/${p.id}`}
+                        className="absolute inset-0"
+                        aria-label={`Ver protocolo ${p.number}`}
+                      />
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono text-xs font-semibold text-primary">
                           {p.number}
@@ -272,7 +280,7 @@ export default async function ProtocolsPage({
                         {formatDate(p.createdAt)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right relative z-10">
                       <Link href={`/protocols/${p.id}`}>
                         <Button variant="ghost" size="icon">
                           <Eye className="h-4 w-4" />

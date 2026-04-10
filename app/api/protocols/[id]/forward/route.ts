@@ -48,7 +48,7 @@ export async function POST(
     )
 
     if (protocol) {
-      await NotificationService.createForSecretariat(
+      void NotificationService.createForSecretariat(
         parsed.data.toSecretariatId,
         {
           type: "PROTOCOL_FORWARDED",
@@ -58,26 +58,27 @@ export async function POST(
           entityId: id,
         },
         session.user.id
-      )
+      ).catch((err) => console.error("[forward] notification error:", err))
 
       // Notify watchers
-      const watchers = await prisma.protocolWatch.findMany({
+      void prisma.protocolWatch.findMany({
         where: { protocolId: id },
         select: { userId: true },
-      })
-      if (watchers.length > 0) {
-        await prisma.notification.createMany({
-          data: watchers.map((w) => ({
-            userId: w.userId,
-            type: "PROTOCOL_FORWARDED",
-            title: `Protocolo ${protocol.number} encaminhado`,
-            body: `"${protocol.title}" foi encaminhado.`,
-            entityType: "Protocol",
-            entityId: id,
-          })),
-          skipDuplicates: true,
-        })
-      }
+      }).then((watchers) => {
+        if (watchers.length > 0) {
+          return prisma.notification.createMany({
+            data: watchers.map((w) => ({
+              userId: w.userId,
+              type: "PROTOCOL_FORWARDED",
+              title: `Protocolo ${protocol.number} encaminhado`,
+              body: `"${protocol.title}" foi encaminhado.`,
+              entityType: "Protocol",
+              entityId: id,
+            })),
+            skipDuplicates: true,
+          })
+        }
+      }).catch((err) => console.error("[forward] watcher notification error:", err))
     }
 
     return NextResponse.json({ ok: true })

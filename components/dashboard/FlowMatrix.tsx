@@ -22,11 +22,11 @@ export function FlowMatrix({ secretariats, flows }: FlowMatrixProps) {
     if (count === 0) return ""
     const intensity = Math.round((count / maxCount) * 4)
     switch (intensity) {
-      case 0: return "bg-blue-50 dark:bg-blue-950/30"
-      case 1: return "bg-blue-100 dark:bg-blue-900/40"
-      case 2: return "bg-blue-200 dark:bg-blue-800/50"
-      case 3: return "bg-blue-300 dark:bg-blue-700/60"
-      default: return "bg-blue-400 dark:bg-blue-600/70 text-white"
+      case 0: return "bg-primary/5"
+      case 1: return "bg-primary/15"
+      case 2: return "bg-primary/30"
+      case 3: return "bg-primary/50"
+      default: return "bg-primary/70 text-white"
     }
   }
 

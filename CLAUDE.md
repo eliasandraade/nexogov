@@ -280,7 +280,60 @@ Aceita parâmetros `from` e `to` (ISO date) para `protocols` e `movements`.
 
 Ao trabalhar neste projeto:
 - Preservar consistência entre schema Prisma, services e interface
-- Nunca colocar regra de negócio em componentes ou route handlers diretamente
+- Nunca colocar regra de negócio complexa em componentes ou route handlers diretamente
 - Tratar o NexoGov como sistema crítico e institucional
 - Considerar sempre o valor futuro dos dados para pesquisa acadêmica
 - Começar pela solução mais sólida e direta viável para o estágio atual
+
+---
+
+## Workflow de Sessão (Claude Code)
+
+**Ao iniciar cada sessão, executar obrigatoriamente:**
+
+```bash
+git log --oneline -10
+git status
+```
+
+Apresentar resumo do estado atual e perguntar qual é a tarefa antes de qualquer ação.
+
+---
+
+## Roteamento de Skills e Plugins
+
+Ao receber uma tarefa, identificar o contexto e invocar a skill correspondente **antes de responder diretamente**. Nunca resolver ad-hoc o que uma skill cobre.
+
+| Contexto | Skill / Plugin |
+|---|---|
+| Feature nova ainda não iniciada | `/office-hours` — obrigatório antes de qualquer implementação |
+| Revisão estratégica (o quê construir, por quê, prioridade) | `/plan-ceo-review` |
+| Revisão de arquitetura, schema, fluxo entre secretarias | `/plan-eng-review` |
+| Qualquer componente de UI, tela, dashboard, layout | `/frontend-design` (plugin) |
+| Code review antes de mergear qualquer mudança | `/code-review` (plugin) + `/review` |
+| Deploy para Railway (produção) | `/careful` → `/ship` → `/land-and-deploy` |
+| Bug, comportamento inesperado, regressão | `/investigate` (ativa freeze automático no módulo) |
+| Alteração de schema Prisma, migration, DROP, reset de banco | `/careful` obrigatório antes de qualquer comando |
+| QA de fluxos: tramitação, autenticação, permissões, consulta pública | `/qa` |
+| Documentar feature ou fluxo para auditoria / pesquisa | `/document-release` |
+| Benchmark de performance (queries lentas, TTI, rendering) | `/benchmark` |
+| Revisão pós-sprint, lições aprendidas | `/retro` |
+
+### Regra de segurança de deploys
+Antes de qualquer `prisma db push` em produção ou operação irreversível:
+1. Rodar `/careful` para ativar modo cauteloso
+2. Confirmar impacto explicitamente
+3. Só então executar
+
+---
+
+## gstack
+
+Web browsing: usar sempre `/browse`. Nunca usar `mcp__claude-in-chrome__*` diretamente.
+
+Skills disponíveis: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review,
+/design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy,
+/canary, /benchmark, /browse, /connect-chrome, /qa, /qa-only, /design-review,
+/setup-browser-cookies, /setup-deploy, /retro, /investigate, /document-release, /codex,
+/cso, /autoplan, /plan-devex-review, /devex-review, /careful, /freeze, /guard,
+/unfreeze, /gstack-upgrade, /learn

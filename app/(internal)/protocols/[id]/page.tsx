@@ -26,13 +26,30 @@ import { TagsEditor } from "@/components/protocols/TagsEditor"
 import { CommentsSection } from "@/components/protocols/CommentsSection"
 import { WatchButton } from "@/components/protocols/WatchButton"
 import { MetricsService } from "@/services/metrics.service"
+import { canForwardProtocol } from "@/lib/permissions"
 import { FileText, User, Calendar, MapPin, Clock, Download, Timer, Printer, MessageSquare, ShieldCheck, MessageCircle } from "lucide-react"
 import Link from "next/link"
 
 async function getProtocol(id: string) {
   return prisma.protocol.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      number: true,
+      title: true,
+      type: true,
+      status: true,
+      priority: true,
+      description: true,
+      internalNotes: true,
+      requesterName: true,
+      requesterDocument: true,
+      requesters: true,
+      tags: true,
+      deadlineAt: true,
+      createdAt: true,
+      updatedAt: true,
+      closedAt: true,
       originSecretariat: { select: { name: true, code: true } },
       originOrgan: { select: { name: true } },
       originSector: { select: { name: true } },
@@ -42,7 +59,13 @@ async function getProtocol(id: string) {
       createdBy: { select: { name: true } },
       movements: {
         orderBy: { createdAt: "asc" },
-        include: {
+        select: {
+          id: true,
+          type: true,
+          description: true,
+          notes: true,
+          isInterSecretariat: true,
+          createdAt: true,
           fromSecretariat: { select: { name: true, code: true } },
           fromSector: { select: { name: true } },
           toSecretariat: { select: { name: true, code: true } },
@@ -52,7 +75,17 @@ async function getProtocol(id: string) {
       },
       documents: {
         orderBy: { createdAt: "desc" },
-        include: {
+        select: {
+          id: true,
+          originalName: true,
+          mimeType: true,
+          sizeBytes: true,
+          fileHash: true,
+          description: true,
+          visibility: true,
+          category: true,
+          url: true,
+          createdAt: true,
           uploadedBy: { select: { name: true } },
         },
       },
@@ -74,9 +107,7 @@ export default async function ProtocolDetailPage({
 
   if (!protocol) notFound()
 
-  const canForward = ["ADMIN_SISTEMA", "DEV", "ADMIN", "GESTOR", "PREFEITO", "VICE_PREFEITO", "SECRETARIO", "SERVIDOR_PUBLICO", "PROTOCOLO"].includes(
-    session?.user.role ?? ""
-  )
+  const canForward = canForwardProtocol(session!.user.role)
 
   return (
     <div>

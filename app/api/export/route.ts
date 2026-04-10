@@ -50,6 +50,7 @@ async function exportProtocols(params: URLSearchParams) {
 
   const protocols = await prisma.protocol.findMany({
     where,
+    take: 5000,
     select: {
       id: true,
       number: true,
@@ -117,6 +118,7 @@ async function exportMovements(params: URLSearchParams) {
 
   const movements = await prisma.movement.findMany({
     where,
+    take: 10000,
     select: {
       id: true,
       type: true,

@@ -5,6 +5,8 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { loginValidator } from "@/validators/login.validator"
 import { authConfig } from "./auth.config"
+import { rateLimit } from "@/lib/rate-limit"
+import { logAudit } from "@/lib/audit/log"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -16,7 +18,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "E-mail", type: "email" },
         password: { label: "Senha", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
+        const ip =
+          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+          request.headers.get("x-real-ip") ??
+          "unknown"
+        const limited = rateLimit(`login:${ip}`, { maxRequests: 10, windowSeconds: 60 })
+        if (!limited.allowed) return null
+
         const parsed = loginValidator.safeParse(credentials)
         if (!parsed.success) return null
 
@@ -49,4 +58,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  events: {
+    async signIn({ user }) {
+      if (user.id) {
+        await logAudit({
+          action: "LOGIN",
+          userId: user.id,
+          entityType: "User",
+          entityId: user.id,
+        })
+      }
+    },
+    async signOut(message) {
+      const token = "token" in message ? message.token : null
+      if (token?.sub) {
+        await logAudit({
+          action: "LOGOUT",
+          userId: token.sub,
+          entityType: "User",
+          entityId: token.sub,
+        })
+      }
+    },
+  },
 })

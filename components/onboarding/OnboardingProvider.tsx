@@ -51,8 +51,7 @@ export function OnboardingProvider({ role, hasCompleted }: Props) {
         doneBtnText: "Concluir",
         allowClose: true,
         steps,
-        onDestroyStarted: () => {
-          driverObj.destroy()
+        onDestroyed: () => {
           localStorage.setItem(tourKey, "true")
           if (tourKey === BASE_TOUR_KEY) {
             fetch("/api/user/onboarding", {
